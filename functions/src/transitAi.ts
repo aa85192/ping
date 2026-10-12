@@ -57,13 +57,15 @@ export type GeminiAuth = { kind: 'vertex'; project: string; token: () => Promise
  * the answer is missing, unparseable or the model says it isn't confident.
  */
 export async function askTransitAi(req: RouteRequest, auth: GeminiAuth, model = DEFAULT_GEMINI_MODEL, fetchImpl: Fetch = fetch): Promise<RouteResponse | null> {
-  const body = JSON.stringify({
-    contents: [{ role: 'user', parts: [{ text: buildPrompt(req) }] }],
-    tools: [{ googleSearch: {} }],
-    generationConfig: { temperature: 0.1 },
-  });
-  const res =
-    auth.kind === 'vertex'
+  const payload = (fast: boolean) =>
+    JSON.stringify({
+      contents: [{ role: 'user', parts: [{ text: buildPrompt(req) }] }],
+      tools: [{ googleSearch: {} }],
+      // Little reasoning is needed to read a timetable off search results; it cuts latency a lot.
+      generationConfig: fast ? { temperature: 0.1, thinkingConfig: { thinkingLevel: 'LOW' } } : { temperature: 0.1 },
+    });
+  async function call(body: string) {
+    return auth.kind === 'vertex'
       ? await fetchImpl(`https://aiplatform.googleapis.com/v1/projects/${auth.project}/locations/global/publishers/google/models/${model}:generateContent`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${await auth.token()}` },
@@ -74,6 +76,9 @@ export async function askTransitAi(req: RouteRequest, auth: GeminiAuth, model = 
           headers: { 'Content-Type': 'application/json', 'x-goog-api-key': auth.key },
           body,
         });
+  }
+  let res = await call(payload(true));
+  if (res.status === 400) res = await call(payload(false)); // model without thinking levels
   if (!res.ok) throw new Error(`gemini ${res.status}`);
   const data = (await res.json()) as GeminiReply;
   const cand = data.candidates?.[0];

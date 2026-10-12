@@ -1,9 +1,8 @@
-import { mapsDirectionsUrl, TRAVEL_MODES, type RouteResponse, type TravelMode } from '@ping/shared';
+import { estimateLeg, mapsDirectionsUrl, TRAVEL_MODES, type RouteResponse, type TravelMode } from '@ping/shared';
 import { ExternalLink } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { MODE_LABEL, ModeIcon } from '../../components/icons';
 import { Sheet } from '../../components/Sheet';
-import { jstIso } from '../../lib/time';
 import { formatDistance, formatDuration } from '../../lib/time';
 import { isAnchorId, legKey, toTarget, type LegPlan } from '../../lib/schedule';
 import { dayInfoFor } from '../dashboard/Dashboard';
@@ -17,7 +16,7 @@ function LegSheet({ leg, departMin, date, onClose }: { leg: LegPlan; departMin: 
     else void patchCard(leg.from.id, { legMode: mode });
   };
   const options = TRAVEL_MODES.map((mode) => {
-    const key = legKey(leg.from, leg.to, mode, jstIso(date, departMin));
+    const key = legKey(leg.from, leg.to, mode, date);
     return { mode, key, req: { ...leg.req, mode } };
   });
   useEffect(() => {
@@ -99,14 +98,18 @@ export function LegRow({ leg, departMin, date }: { leg: LegPlan; departMin: numb
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => ensureLeg(leg.key, leg.req), [leg.key]);
   const r: RouteResponse | null = typeof result === 'object' ? result : null;
+  const pending = !r;
+  // While waiting (AI transit lookups take a while) show the distance estimate instead of a blank.
+  const interim = pending && leg.req.origin.location && leg.req.destination.location ? estimateLeg(leg.req.origin.location, leg.req.destination.location, leg.mode) : null;
   return (
     <div className="leg">
       <button className="leg-pill" onClick={() => setOpen(true)} aria-label={`交通方式：${MODE_LABEL[leg.mode]}，點擊切換`}>
         <span className={`mode mode-${leg.mode}`}>
           <ModeIcon mode={leg.mode} size={14} />
         </span>
-        <span className="num">{result === 'loading' || !result ? '計算中…' : formatDuration(r?.durationSec)}</span>
+        <span className="num">{r ? formatDuration(r.durationSec) : interim ? `約 ${formatDuration(interim.durationSec)}` : '計算中…'}</span>
         {r?.distanceM != null && <span className="muted num tiny">{formatDistance(r.distanceM)}</span>}
+        {pending && leg.mode === 'TRANSIT' && <span className="est loading">查詢中</span>}
         {r?.source === 'estimate' && <span className="est">估</span>}
         {r?.source === 'ai' && <span className="est ai">AI</span>}
       </button>

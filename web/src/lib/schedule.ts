@@ -47,9 +47,9 @@ function endpointKey(c: PlaceCard): string {
   return `name:${c.name}`;
 }
 
-export function legKey(from: PlaceCard, to: PlaceCard, mode: TravelMode, departIso: string): string {
-  // Transit depends on the timetable; bucket by hour so small edits don't refetch.
-  const bucket = mode === 'TRANSIT' ? departIso.slice(0, 13) : '';
+export function legKey(from: PlaceCard, to: PlaceCard, mode: TravelMode, date: string): string {
+  // Transit is looked up once per day (AI lookups are slow); moving a stop by an hour reuses it.
+  const bucket = mode === 'TRANSIT' ? date : '';
   return `${endpointKey(from)}>${endpointKey(to)}|${mode}|${bucket}`;
 }
 
@@ -94,7 +94,7 @@ export function buildSchedule(
       const mode = legMode(card, day, trip);
       if (canRoute(card) && canRoute(next)) {
         const departIso = jstIso(date, depart);
-        const key = legKey(card, next, mode, departIso);
+        const key = legKey(card, next, mode, date);
         leg = {
           key,
           mode,

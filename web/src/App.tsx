@@ -10,6 +10,7 @@ import { MapView } from './features/map/MapView';
 import { PickTrip, SignIn } from './features/onboarding/Onboarding';
 import { Settings } from './features/settings/Settings';
 import type { TabId } from './lib/prefs';
+import { usePrefetchLegs } from './lib/prefetch';
 import { useApplyTheme } from './lib/useTheme';
 import { useApp } from './store';
 
@@ -32,6 +33,7 @@ captureShare();
 
 export function App() {
   useApplyTheme();
+  usePrefetchLegs();
   const phase = useApp((s) => s.phase);
   const error = useApp((s) => s.error);
   const cards = useApp((s) => s.cards);

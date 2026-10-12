@@ -38,6 +38,18 @@ describe('transit AI', () => {
     expect((init.headers as Record<string, string>).Authorization).toBe('Bearer T');
   });
 
+  it('asks for low thinking and retries without it when the model rejects the option', async () => {
+    const bodies: string[] = [];
+    const f = vi.fn(async (_u: RequestInfo | URL, init?: RequestInit) => {
+      bodies.push(String(init?.body));
+      return bodies.length === 1 ? new Response('bad', { status: 400 }) : gemini('{"durationMin": 30, "confident": true}');
+    });
+    const r = await askTransitAi(req, { kind: 'key', key: 'K' }, undefined, f as unknown as typeof fetch);
+    expect(r?.durationSec).toBe(1800);
+    expect(bodies[0]).toContain('thinkingLevel');
+    expect(bodies[1]).not.toContain('thinkingLevel');
+  });
+
   it('rejects unconfident or nonsense answers', async () => {
     const f1 = vi.fn(async () => gemini('{"durationMin": 60, "confident": false}'));
     expect(await askTransitAi(req, { kind: 'key', key: 'K' }, undefined, f1 as unknown as typeof fetch)).toBeNull();
@@ -57,7 +69,7 @@ describe('transit AI', () => {
     expect(f).toHaveBeenCalledTimes(2); // routes + gemini once; second call served from cache
 
     const bad = vi.fn(async (url: RequestInfo | URL) => (String(url).includes('routes.googleapis.com') ? new Response('{}') : new Response('err', { status: 500 })));
-    const r = await handleApi({ method: 'POST', path: '/api/route', query: {}, body: { ...req, departureTime: '2026-10-27T05:00:00Z' } }, { mapsKey: 'K', gemini: { kind: 'key', key: 'K' }, cache, fetchImpl: bad as unknown as typeof fetch });
+    const r = await handleApi({ method: 'POST', path: '/api/route', query: {}, body: { ...req, departureTime: '2026-10-28T05:00:00Z' } }, { mapsKey: 'K', gemini: { kind: 'key', key: 'K' }, cache, fetchImpl: bad as unknown as typeof fetch });
     expect(r.json).toMatchObject({ source: 'estimate', error: 'no-route' });
   });
 });
