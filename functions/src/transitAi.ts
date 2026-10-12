@@ -1,4 +1,4 @@
-import type { RouteRequest, RouteResponse, RouteSource } from '@ping/shared';
+import { estimateLeg, haversineM, type RouteRequest, type RouteResponse, type RouteSource } from '@ping/shared';
 
 type Fetch = typeof fetch;
 
@@ -10,21 +10,41 @@ function jstText(iso: string | undefined): string {
 }
 
 function describe(e: RouteRequest['origin']): string {
-  const loc = e.location ? `（緯度經度 ${e.location.lat.toFixed(5)}, ${e.location.lng.toFixed(5)}）` : '';
-  return `${e.name ?? '指定地點'}${loc}`;
+  const loc = e.location ? ` (${e.location.lat.toFixed(5)}, ${e.location.lng.toFixed(5)})` : '';
+  return `${e.name ?? 'pin'}${loc}`;
 }
 
+/** Short English instructions; facts must come from Japanese transit sites found by Google Search. */
 export function buildPrompt(req: RouteRequest): string {
-  return [
-    '你是日本大眾運輸查詢助手。請用 Google 搜尋查詢以下路線，優先參考 Yahoo!路線情報、ジョルダン、NAVITIME、駅探 的轉乘結果。',
-    `出發：${describe(req.origin)}`,
-    `目的地：${describe(req.destination)}`,
-    `出發時間（日本時間）：${jstText(req.departureTime)}`,
-    '選最一般遊客會搭的路線（不含計程車），時間包含頭尾步行。',
-    '只輸出一個 JSON 物件，不要其他文字：',
-    '{"durationMin": 數字, "fareYen": 數字或 null, "transfers": 數字, "summary": "繁體中文，車站與路線名保留日文漢字，例如：步行 5 分 → JR大阪環状線 新今宮→大阪 → JR京都線 新快速 大阪→京都 → JR奈良線 京都→稲荷 → 步行 2 分", "confident": true 或 false}',
-    '查不到可靠資料時 confident 設為 false。',
-  ].join('\n');
+  const from = req.origin.name ?? '';
+  const to = req.destination.name ?? '';
+  return `Task: Japan public-transit route lookup via Google Search.
+Search in Japanese, e.g. "${from} ${to} 乗換". Prefer result pages from transit.yahoo.co.jp, jorudan.co.jp, navitime.co.jp, ekitan.com.
+From: ${describe(req.origin)}
+To: ${describe(req.destination)}
+Depart: ${jstText(req.departureTime)} JST
+Rules:
+- Route most tourists would take: train/subway/bus/walk only, no taxi.
+- durationMin: door-to-door minutes incl. walking, waiting and transfers, for the first departure at/after Depart.
+- fareYen: adult one-way IC fare in yen; for Shinkansen/limited express include the reserved-seat surcharge; null if not stated.
+- Use only facts stated by a source. Never guess. If no source or sources disagree: confident=false.
+Output ONLY this JSON, no other text:
+{"durationMin":int,"fareYen":int|null,"transfers":int,"summary":"zh-TW, keep Japanese station/line names, e.g. 步行5分 → JR大阪環状線 新今宮→大阪 → JR京都線新快速 大阪→京都 → 步行3分","confident":bool}`;
+}
+
+/**
+ * Reject answers that can't be right: faster than a Shinkansen in a straight line,
+ * or several times slower than the distance-based estimate.
+ */
+export function plausible(req: RouteRequest, minutes: number): boolean {
+  if (minutes <= 0 || minutes > 24 * 60) return false;
+  const a = req.origin.location;
+  const b = req.destination.location;
+  if (!a || !b) return true;
+  const km = haversineM(a, b) / 1000;
+  const fastest = (km / 280) * 60;
+  const slowest = estimateLeg(a, b, 'TRANSIT').durationSec / 60 * 3 + 30;
+  return minutes >= fastest && minutes <= slowest;
 }
 
 /** Pull the first {...} block out of a model reply (it may wrap JSON in prose or ```json fences). */
@@ -85,7 +105,7 @@ export async function askTransitAi(req: RouteRequest, auth: GeminiAuth, model = 
   const text = (cand?.content?.parts ?? []).map((p) => p.text ?? '').join('');
   const j = extractJson(text);
   const minutes = Number(j?.durationMin);
-  if (!j || j.confident === false || !Number.isFinite(minutes) || minutes <= 0 || minutes > 24 * 60) return null;
+  if (!j || j.confident === false || !Number.isFinite(minutes) || !plausible(req, minutes)) return null;
   const sources: RouteSource[] = [];
   for (const c of cand?.groundingMetadata?.groundingChunks ?? []) {
     if (c.web?.uri && sources.length < 4) sources.push({ title: c.web.title ?? c.web.uri, url: c.web.uri });

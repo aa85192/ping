@@ -65,7 +65,7 @@ export async function handleApi(req: ApiRequest, deps: ApiDeps): Promise<ApiResu
       if (!r.origin || !r.destination || !r.mode) return { status: 400, json: { error: 'origin, destination, mode required' } };
       // Transit answers are reused for the whole (JST) day; other modes don't depend on time.
       const day = r.mode === 'TRANSIT' && r.departureTime ? new Date(Date.parse(r.departureTime) + 9 * 3600_000).toISOString().slice(0, 10) : '';
-      const key = `route:v4:${JSON.stringify([r.origin.placeId ?? r.origin.location, r.destination.placeId ?? r.destination.location, r.mode, day])}`;
+      const key = `route:v5:${JSON.stringify([r.origin.placeId ?? r.origin.location, r.destination.placeId ?? r.destination.location, r.mode, day])}`;
       // Google returns no transit routes in Japan (Routes API FAQ), so fall back to
       // Gemini + Google Search, then to the distance estimate. All answers are cached.
       const res = await cached(

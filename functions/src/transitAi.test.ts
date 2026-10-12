@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { handleApi } from './api';
-import { askTransitAi, buildPrompt, extractJson } from './transitAi';
+import { askTransitAi, buildPrompt, extractJson, plausible } from './transitAi';
 
 const req = {
   origin: { name: '新今宮駅', location: { lat: 34.6496, lng: 135.5013 } },
@@ -17,7 +17,9 @@ describe('transit AI', () => {
     const p = buildPrompt(req);
     expect(p).toContain('新今宮駅');
     expect(p).toContain('34.96710, 135.77270');
-    expect(p).toContain('2026-10-27 07:30');
+    expect(p).toContain('2026-10-27 07:30 JST');
+    expect(p).toContain('新今宮駅 伏見稲荷大社 乗換');
+    expect(p.length).toBeLessThan(1200); // keep it short
   });
 
   it('extracts JSON wrapped in prose or fences', () => {
@@ -48,6 +50,12 @@ describe('transit AI', () => {
     expect(r?.durationSec).toBe(1800);
     expect(bodies[0]).toContain('thinkingLevel');
     expect(bodies[1]).not.toContain('thinkingLevel');
+  });
+
+  it('rejects physically impossible durations', () => {
+    expect(plausible(req, 3)).toBe(false); // 43 km in 3 min
+    expect(plausible(req, 60)).toBe(true);
+    expect(plausible(req, 600)).toBe(false); // 10 h for a 1 h trip
   });
 
   it('rejects unconfident or nonsense answers', async () => {

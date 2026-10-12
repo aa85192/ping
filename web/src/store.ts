@@ -63,7 +63,7 @@ interface AppState {
   ensureLeg: (key: string, req: RouteRequest) => void;
 }
 
-const LEG_CACHE = 'ping:legs';
+const LEG_CACHE = 'ping:legs:v2'; // bump when route answers change (e.g. new AI prompt)
 
 function loadLegCache(): Record<string, RouteResponse> {
   try {
