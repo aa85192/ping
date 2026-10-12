@@ -65,6 +65,7 @@ Google Cloud console → API 和服務 → 憑證：
 ```bash
 npx firebase-tools login
 npx firebase-tools use --add          # 選你的專案
+npm run build:functions               # 先產生 functions/deploy（第一次部署前需要）
 npx firebase-tools deploy             # 會自動 build 網站與 function，並部署 Firestore 規則
 ```
 
