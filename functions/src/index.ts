@@ -37,6 +37,7 @@ export const api = onRequest(
     region: 'asia-east1',
     secrets: [MAPS_KEY],
     memory: '256MiB',
+    timeoutSeconds: 60, // grounded Gemini lookups can take ~10–20 s
     maxInstances: 3, // two travellers; also caps the bill if a token ever leaks
     cors: isEmulator ? true : false, // production is same-origin through Firebase Hosting
   },
@@ -55,7 +56,14 @@ export const api = onRequest(
     try {
       const out = await handleApi(
         { method: req.method, path: req.path, query: req.query as Record<string, string | undefined>, body: req.body },
-        { mapsKey: MAPS_KEY.value() || undefined, metaToken: process.env.META_ACCESS_TOKEN, cache: firestoreCache },
+        {
+          mapsKey: MAPS_KEY.value() || undefined,
+          // Same key, with "Generative Language API" added to its API restrictions.
+          geminiKey: process.env.DISABLE_TRANSIT_AI === 'true' ? undefined : MAPS_KEY.value() || undefined,
+          geminiModel: process.env.GEMINI_MODEL || undefined,
+          metaToken: process.env.META_ACCESS_TOKEN,
+          cache: firestoreCache,
+        },
       );
       res.status(out.status).json(out.json);
     } catch (e) {

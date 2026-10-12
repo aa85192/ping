@@ -2,6 +2,7 @@ import type { RouteRequest } from '@ping/shared';
 import { linkPreview, oembed } from './meta';
 import { resolvePlace } from './resolve';
 import { computeRoute } from './route';
+import { askTransitAi } from './transitAi';
 
 const DAY = 86400;
 
@@ -12,6 +13,9 @@ export interface Cache {
 
 export interface ApiDeps {
   mapsKey?: string;
+  /** Gemini API key (can be the same key as Maps if Generative Language API is allowed on it). */
+  geminiKey?: string;
+  geminiModel?: string;
   metaToken?: string;
   cache: Cache;
   fetchImpl?: typeof fetch;
@@ -60,9 +64,21 @@ export async function handleApi(req: ApiRequest, deps: ApiDeps): Promise<ApiResu
       const r = body as unknown as RouteRequest;
       if (!r.origin || !r.destination || !r.mode) return { status: 400, json: { error: 'origin, destination, mode required' } };
       const hour = r.mode === 'TRANSIT' ? (r.departureTime ?? '').slice(0, 13) : '';
-      const key = `route:v2:${JSON.stringify([r.origin, r.destination, r.mode, hour])}`;
-      // Google returns no transit routes in Japan; cache that answer too so we don't pay to ask again.
-      const res = await cached(deps.cache, key, 7 * DAY, () => computeRoute(r, deps.mapsKey, f), (v) => v.source === 'routes-api' || v.error === 'no-route');
+      const key = `route:v3:${JSON.stringify([r.origin.placeId ?? r.origin.location, r.destination.placeId ?? r.destination.location, r.mode, hour])}`;
+      // Google returns no transit routes in Japan (Routes API FAQ), so fall back to
+      // Gemini + Google Search, then to the distance estimate. All answers are cached.
+      const res = await cached(
+        deps.cache,
+        key,
+        7 * DAY,
+        async () => {
+          const google = await computeRoute(r, deps.mapsKey, f);
+          if (google.source === 'routes-api' || r.mode !== 'TRANSIT' || !deps.geminiKey) return google;
+          const ai = await askTransitAi(r, deps.geminiKey, deps.geminiModel, f).catch(() => null);
+          return ai ?? google;
+        },
+        (v) => v.source === 'routes-api' || v.source === 'ai' || v.error === 'no-route',
+      );
       return { status: 200, json: res };
     }
 

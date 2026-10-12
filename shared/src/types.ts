@@ -57,6 +57,8 @@ export interface ResolvePlaceResponse {
 export interface RouteEndpoint {
   placeId?: string;
   location?: LatLng;
+  /** Human-readable name; used when an AI lookup is needed. */
+  name?: string;
 }
 
 export interface RouteRequest {
@@ -67,11 +69,20 @@ export interface RouteRequest {
   departureTime?: string;
 }
 
+export interface RouteSource {
+  title: string;
+  url: string;
+}
+
 export interface RouteResponse {
   durationSec: number | null;
   distanceM: number | null;
   summary?: string;
-  source: 'routes-api' | 'estimate';
+  /** 'ai' = Gemini + Google Search (Japan transit, which the Routes API doesn't cover). */
+  source: 'routes-api' | 'ai' | 'estimate';
+  fareYen?: number | null;
+  transfers?: number | null;
+  sources?: RouteSource[];
   error?: string;
 }
 

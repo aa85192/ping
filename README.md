@@ -85,8 +85,16 @@ npx firebase-tools deploy             # 會自動 build 網站與 function，並
 
 結果應該是每月 US$1 以下，從額度扣。注意：額度是否涵蓋 **Google Maps Platform** 請在「帳單 → 報表」看第一週的實際扣款確認；就算不涵蓋，自用量也多半落在 Maps 的每月免費用量裡。
 
+## 日本電車路線（Gemini）
+
+Routes API 不提供日本的大眾運輸路線（[官方 FAQ](https://developers.google.com/maps/faq?csw=1)）。查不到時，function 會改問 Gemini（開啟 Google 搜尋），整理出時間、路線、票價和參考來源，結果快取 7 天。查詢失敗才退回距離估算。
+
+- 需要在專案啟用 **Generative Language API**，並把它加進 `ping-server` 金鑰的 API 限制（共用同一把金鑰）。
+- 模型預設 `gemini-3.8-flash`；要換的話建立 `functions/.env` 寫 `GEMINI_MODEL=…` 後重新部署。
+- 要關掉：`functions/.env` 寫 `DISABLE_TRANSIT_AI=true`。
+
 ## 已知限制
 
-- **日本的大眾運輸路線**：Google Routes API 在日本可能不回傳 transit 結果。此時路段顯示「估」（直線距離推估），點路段可直接開 Google Maps 查真正的電車路線。
+- **日本的大眾運輸路線**：由 Gemini 搜尋網路整理（標「AI」），可能與實際班次有出入；出發時請點路段開 Google Maps 確認。
 - **Threads / IG 預覽**：使用 Meta 2026/6 開放的免 token oEmbed，只支援公開貼文；被限流時可在 function 設環境變數 `META_ACCESS_TOKEN`。
 - **星星人色號**：POP MART 沒有公開官方色號，`web/src/theme/tokens.ts` 是依角色特徵訂的固定色票；設定頁可「從照片取色」用自己的公仔照片校正。

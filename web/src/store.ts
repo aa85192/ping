@@ -74,7 +74,7 @@ function loadLegCache(): Record<string, RouteResponse> {
 }
 
 function saveLegCache(legs: Record<string, RouteResponse | 'loading' | undefined>) {
-  const entries = Object.entries(legs).filter((e): e is [string, RouteResponse] => typeof e[1] === 'object' && e[1] !== null && e[1].source === 'routes-api');
+  const entries = Object.entries(legs).filter((e): e is [string, RouteResponse] => typeof e[1] === 'object' && e[1] !== null && (e[1].source === 'routes-api' || e[1].source === 'ai'));
   try {
     localStorage.setItem(LEG_CACHE, JSON.stringify(Object.fromEntries(entries.slice(-600))));
   } catch {

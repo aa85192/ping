@@ -45,6 +45,7 @@ function LegSheet({ leg, departMin, date, onClose }: { leg: LegPlan; departMin: 
               {MODE_LABEL[o.mode]}
               <span className="num">{v === 'loading' ? '…' : res ? formatDuration(res.durationSec) : '—'}</span>
               {res?.source === 'estimate' && <span className="tiny muted">估算</span>}
+              {res?.source === 'ai' && <span className="tiny muted">AI 查詢</span>}
             </button>
           );
         })}
@@ -56,6 +57,27 @@ function LegSheet({ leg, departMin, date, onClose }: { leg: LegPlan; departMin: 
             <span className="muted num">{formatDistance(r.distanceM)}</span>
           </div>
           {r.summary && <div className="small">🚃 {r.summary}</div>}
+          {(r.fareYen || r.transfers != null) && (
+            <div className="small muted num">
+              {r.fareYen ? `單人約 ¥${r.fareYen.toLocaleString()}` : ''}
+              {r.fareYen && r.transfers != null ? ' · ' : ''}
+              {r.transfers != null ? `轉乘 ${r.transfers} 次` : ''}
+            </div>
+          )}
+          {r.source === 'ai' && (
+            <div className="tiny muted">
+              ✨ Google 不提供日本電車資料給 API，這段由 Gemini 搜尋網路（乘換案內等網站）整理，班次與票價請以 Google Maps 為準。
+              {r.sources?.length ? (
+                <div className="row wrap" style={{ marginTop: 4, gap: 4 }}>
+                  {r.sources.map((s) => (
+                    <a key={s.url} className="chip outline" href={s.url} target="_blank" rel="noreferrer">
+                      {s.title.slice(0, 24)}
+                    </a>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+          )}
           {r.source === 'estimate' && (
             <div className="tiny muted">
               這是依直線距離推估的時間{r.error === 'no-route' ? '（Google 沒有回傳這段路線，日本的大眾運輸常見這種情況）' : ''}。實際請以 Google Maps 為準。
@@ -86,6 +108,7 @@ export function LegRow({ leg, departMin, date }: { leg: LegPlan; departMin: numb
         <span className="num">{result === 'loading' || !result ? '計算中…' : formatDuration(r?.durationSec)}</span>
         {r?.distanceM != null && <span className="muted num tiny">{formatDistance(r.distanceM)}</span>}
         {r?.source === 'estimate' && <span className="est">估</span>}
+        {r?.source === 'ai' && <span className="est ai">AI</span>}
       </button>
       <a
         className="icon-btn"

@@ -101,8 +101,8 @@ export function buildSchedule(
           from: card,
           to: next,
           req: {
-            origin: { placeId: card.placeId ?? undefined, location: card.location ?? undefined },
-            destination: { placeId: next.placeId ?? undefined, location: next.location ?? undefined },
+            origin: { placeId: card.placeId ?? undefined, location: card.location ?? undefined, name: card.name },
+            destination: { placeId: next.placeId ?? undefined, location: next.location ?? undefined, name: next.name },
             mode,
             departureTime: departIso,
           },

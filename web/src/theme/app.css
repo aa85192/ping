@@ -238,6 +238,7 @@ h3 { font-size: 15px; }
   border-radius: 999px; font-size: 13px; font-weight: 500; border: 1px solid var(--border); background: var(--surface); cursor: pointer;
 }
 .leg-pill .mode { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 999px; }
+.leg-pill .est.ai { color: var(--sky-ink); border-color: var(--sky); }
 .leg-pill .est { font-size: 11px; color: var(--muted); border: 1px solid var(--border); border-radius: 6px; padding: 0 4px; }
 .mode-WALK { background: var(--mint-soft); color: var(--mint-ink); }
 .mode-TRANSIT { background: var(--sky-soft); color: var(--sky-ink); }
