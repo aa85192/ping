@@ -61,7 +61,8 @@ export async function handleApi(req: ApiRequest, deps: ApiDeps): Promise<ApiResu
       if (!r.origin || !r.destination || !r.mode) return { status: 400, json: { error: 'origin, destination, mode required' } };
       const hour = r.mode === 'TRANSIT' ? (r.departureTime ?? '').slice(0, 13) : '';
       const key = `route:${JSON.stringify([r.origin, r.destination, r.mode, hour])}`;
-      const res = await cached(deps.cache, key, 7 * DAY, () => computeRoute(r, deps.mapsKey, f), (v) => v.source === 'routes-api');
+      // Google returns no transit routes in Japan; cache that answer too so we don't pay to ask again.
+      const res = await cached(deps.cache, key, 7 * DAY, () => computeRoute(r, deps.mapsKey, f), (v) => v.source === 'routes-api' || v.error === 'no-route');
       return { status: 200, json: res };
     }
 

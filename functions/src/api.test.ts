@@ -131,6 +131,13 @@ describe('handleApi', () => {
     );
     expect(est.json).toMatchObject({ source: 'estimate' });
     expect(cache.store.size).toBe(1);
+
+    // An empty answer (no transit coverage) is cached as well.
+    const empty = vi.fn(async () => res({}));
+    const transit = { origin: { location: { lat: 34.6496, lng: 135.5013 } }, destination: { location: { lat: 34.9671, lng: 135.7727 } }, mode: 'TRANSIT' };
+    await handleApi({ method: 'POST', path: '/api/route', query: {}, body: transit }, { mapsKey: 'K', cache, fetchImpl: empty as unknown as typeof fetch });
+    await handleApi({ method: 'POST', path: '/api/route', query: {}, body: transit }, { mapsKey: 'K', cache, fetchImpl: empty as unknown as typeof fetch });
+    expect(empty).toHaveBeenCalledTimes(1);
   });
 
   it('validates input and 404s unknown routes', async () => {
