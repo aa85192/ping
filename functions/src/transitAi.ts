@@ -47,19 +47,33 @@ interface GeminiReply {
 }
 
 /**
+ * Vertex AI is billed through Cloud Billing (where the Google Cloud credits are);
+ * the AI Studio Gemini API key route uses a separate prepaid balance.
+ */
+export type GeminiAuth = { kind: 'vertex'; project: string; token: () => Promise<string> } | { kind: 'key'; key: string };
+
+/**
  * Ask Gemini (grounded with Google Search) for a transit route. Returns null when
  * the answer is missing, unparseable or the model says it isn't confident.
  */
-export async function askTransitAi(req: RouteRequest, key: string, model = DEFAULT_GEMINI_MODEL, fetchImpl: Fetch = fetch): Promise<RouteResponse | null> {
-  const res = await fetchImpl(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
-    body: JSON.stringify({
-      contents: [{ role: 'user', parts: [{ text: buildPrompt(req) }] }],
-      tools: [{ google_search: {} }],
-      generationConfig: { temperature: 0.1 },
-    }),
+export async function askTransitAi(req: RouteRequest, auth: GeminiAuth, model = DEFAULT_GEMINI_MODEL, fetchImpl: Fetch = fetch): Promise<RouteResponse | null> {
+  const body = JSON.stringify({
+    contents: [{ role: 'user', parts: [{ text: buildPrompt(req) }] }],
+    tools: [{ googleSearch: {} }],
+    generationConfig: { temperature: 0.1 },
   });
+  const res =
+    auth.kind === 'vertex'
+      ? await fetchImpl(`https://aiplatform.googleapis.com/v1/projects/${auth.project}/locations/global/publishers/google/models/${model}:generateContent`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${await auth.token()}` },
+          body,
+        })
+      : await fetchImpl(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-goog-api-key': auth.key },
+          body,
+        });
   if (!res.ok) throw new Error(`gemini ${res.status}`);
   const data = (await res.json()) as GeminiReply;
   const cand = data.candidates?.[0];

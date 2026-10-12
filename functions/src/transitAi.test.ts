@@ -31,16 +31,18 @@ describe('transit AI', () => {
         { uri: 'https://transit.yahoo.co.jp/x', title: 'Yahoo!路線情報' },
       ]),
     );
-    const r = await askTransitAi(req, 'K', 'gemini-test', f as unknown as typeof fetch);
+    const r = await askTransitAi(req, { kind: 'vertex', project: 'p1', token: async () => 'T' }, 'gemini-test', f as unknown as typeof fetch);
     expect(r).toMatchObject({ durationSec: 3480, fareYen: 580, transfers: 2, source: 'ai', sources: [{ title: 'Yahoo!路線情報' }] });
-    expect(String((f.mock.calls[0] as unknown[])[0])).toContain('models/gemini-test:generateContent');
+    const [url, init] = f.mock.calls[0] as unknown as [string, RequestInit];
+    expect(url).toBe('https://aiplatform.googleapis.com/v1/projects/p1/locations/global/publishers/google/models/gemini-test:generateContent');
+    expect((init.headers as Record<string, string>).Authorization).toBe('Bearer T');
   });
 
   it('rejects unconfident or nonsense answers', async () => {
     const f1 = vi.fn(async () => gemini('{"durationMin": 60, "confident": false}'));
-    expect(await askTransitAi(req, 'K', undefined, f1 as unknown as typeof fetch)).toBeNull();
+    expect(await askTransitAi(req, { kind: 'key', key: 'K' }, undefined, f1 as unknown as typeof fetch)).toBeNull();
     const f2 = vi.fn(async () => gemini('{"durationMin": "很久"}'));
-    expect(await askTransitAi(req, 'K', undefined, f2 as unknown as typeof fetch)).toBeNull();
+    expect(await askTransitAi(req, { kind: 'key', key: 'K' }, undefined, f2 as unknown as typeof fetch)).toBeNull();
   });
 
   it('API falls back Routes → Gemini → estimate, and caches the AI answer', async () => {
@@ -49,13 +51,13 @@ describe('transit AI', () => {
     const f = vi.fn(async (url: RequestInfo | URL) =>
       String(url).includes('routes.googleapis.com') ? new Response('{}') : gemini('{"durationMin": 58, "confident": true}'),
     );
-    const call = () => handleApi({ method: 'POST', path: '/api/route', query: {}, body: req }, { mapsKey: 'K', geminiKey: 'K', cache, fetchImpl: f as unknown as typeof fetch });
+    const call = () => handleApi({ method: 'POST', path: '/api/route', query: {}, body: req }, { mapsKey: 'K', gemini: { kind: 'key', key: 'K' }, cache, fetchImpl: f as unknown as typeof fetch });
     expect((await call()).json).toMatchObject({ source: 'ai', durationSec: 3480 });
     await call();
     expect(f).toHaveBeenCalledTimes(2); // routes + gemini once; second call served from cache
 
     const bad = vi.fn(async (url: RequestInfo | URL) => (String(url).includes('routes.googleapis.com') ? new Response('{}') : new Response('err', { status: 500 })));
-    const r = await handleApi({ method: 'POST', path: '/api/route', query: {}, body: { ...req, departureTime: '2026-10-27T05:00:00Z' } }, { mapsKey: 'K', geminiKey: 'K', cache, fetchImpl: bad as unknown as typeof fetch });
+    const r = await handleApi({ method: 'POST', path: '/api/route', query: {}, body: { ...req, departureTime: '2026-10-27T05:00:00Z' } }, { mapsKey: 'K', gemini: { kind: 'key', key: 'K' }, cache, fetchImpl: bad as unknown as typeof fetch });
     expect(r.json).toMatchObject({ source: 'estimate', error: 'no-route' });
   });
 });

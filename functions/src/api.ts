@@ -2,7 +2,7 @@ import type { RouteRequest } from '@ping/shared';
 import { linkPreview, oembed } from './meta';
 import { resolvePlace } from './resolve';
 import { computeRoute } from './route';
-import { askTransitAi } from './transitAi';
+import { askTransitAi, type GeminiAuth } from './transitAi';
 
 const DAY = 86400;
 
@@ -13,8 +13,8 @@ export interface Cache {
 
 export interface ApiDeps {
   mapsKey?: string;
-  /** Gemini API key (secret GEMINI_API_KEY, restricted to Generative Language API). */
-  geminiKey?: string;
+  /** How to reach Gemini for Japan transit lookups; undefined disables them. */
+  gemini?: GeminiAuth;
   geminiModel?: string;
   metaToken?: string;
   cache: Cache;
@@ -73,8 +73,11 @@ export async function handleApi(req: ApiRequest, deps: ApiDeps): Promise<ApiResu
         7 * DAY,
         async () => {
           const google = await computeRoute(r, deps.mapsKey, f);
-          if (google.source === 'routes-api' || r.mode !== 'TRANSIT' || !deps.geminiKey) return google;
-          const ai = await askTransitAi(r, deps.geminiKey, deps.geminiModel, f).catch(() => null);
+          if (google.source === 'routes-api' || r.mode !== 'TRANSIT' || !deps.gemini) return google;
+          const ai = await askTransitAi(r, deps.gemini, deps.geminiModel, f).catch((e) => {
+            console.warn('transit AI failed', String(e));
+            return null;
+          });
           return ai ?? google;
         },
         (v) => v.source === 'routes-api' || v.source === 'ai' || v.error === 'no-route',

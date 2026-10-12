@@ -9,7 +9,6 @@ import { handleApi, type Cache } from './api';
 initializeApp();
 
 const MAPS_KEY = defineSecret('GOOGLE_MAPS_SERVER_KEY');
-const GEMINI_KEY = defineSecret('GEMINI_API_KEY');
 
 /** Server-side cache in Firestore (clients can't read it: no rule matches apiCache). */
 const firestoreCache: Cache = {
@@ -32,11 +31,25 @@ function hash(s: string): string {
 }
 
 const isEmulator = process.env.FUNCTIONS_EMULATOR === 'true';
+const PROJECT_ID = process.env.GCLOUD_PROJECT ?? process.env.GOOGLE_CLOUD_PROJECT ?? '';
+
+/** OAuth token of the function's own service account (needs the "Vertex AI User" role). */
+let tokenCache: { value: string; expires: number } | null = null;
+async function serviceAccountToken(): Promise<string> {
+  if (tokenCache && tokenCache.expires > Date.now() + 60_000) return tokenCache.value;
+  const res = await fetch('http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token', {
+    headers: { 'Metadata-Flavor': 'Google' },
+  });
+  if (!res.ok) throw new Error(`metadata token ${res.status}`);
+  const t = (await res.json()) as { access_token: string; expires_in: number };
+  tokenCache = { value: t.access_token, expires: Date.now() + t.expires_in * 1000 };
+  return t.access_token;
+}
 
 export const api = onRequest(
   {
     region: 'asia-east1',
-    secrets: [MAPS_KEY, GEMINI_KEY],
+    secrets: [MAPS_KEY],
     memory: '256MiB',
     timeoutSeconds: 60, // grounded Gemini lookups can take ~10–20 s
     maxInstances: 3, // two travellers; also caps the bill if a token ever leaks
@@ -59,7 +72,7 @@ export const api = onRequest(
         { method: req.method, path: req.path, query: req.query as Record<string, string | undefined>, body: req.body },
         {
           mapsKey: MAPS_KEY.value() || undefined,
-          geminiKey: process.env.DISABLE_TRANSIT_AI === 'true' ? undefined : GEMINI_KEY.value() || undefined,
+          gemini: process.env.DISABLE_TRANSIT_AI === 'true' ? undefined : { kind: 'vertex', project: PROJECT_ID, token: serviceAccountToken },
           geminiModel: process.env.GEMINI_MODEL || undefined,
           metaToken: process.env.META_ACCESS_TOKEN,
           cache: firestoreCache,
