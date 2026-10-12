@@ -5,11 +5,17 @@ import { MODE_LABEL, ModeIcon } from '../../components/icons';
 import { Sheet } from '../../components/Sheet';
 import { jstIso } from '../../lib/time';
 import { formatDistance, formatDuration } from '../../lib/time';
-import { legKey, toTarget, type LegPlan } from '../../lib/schedule';
+import { isAnchorId, legKey, toTarget, type LegPlan } from '../../lib/schedule';
+import { dayInfoFor } from '../dashboard/Dashboard';
 import { useApp } from '../../store';
 
 function LegSheet({ leg, departMin, date, onClose }: { leg: LegPlan; departMin: number; date: string; onClose: () => void }) {
-  const { legs, ensureLeg, patchCard } = useApp();
+  const { legs, ensureLeg, patchCard, patchTrip, trip, bookings } = useApp();
+  const setMode = (mode: TravelMode) => {
+    // The hotel → first stop leg belongs to the day, not to a card.
+    if (isAnchorId(leg.from.id)) void patchTrip({ days: { [date]: { ...dayInfoFor(trip!, date, bookings.find((b) => b.kind === 'lodging')), startLegMode: mode } } });
+    else void patchCard(leg.from.id, { legMode: mode });
+  };
   const options = TRAVEL_MODES.map((mode) => {
     const key = legKey(leg.from, leg.to, mode, jstIso(date, departMin));
     return { mode, key, req: { ...leg.req, mode } };
@@ -31,7 +37,7 @@ function LegSheet({ leg, departMin, date, onClose }: { leg: LegPlan; departMin: 
               key={o.mode}
               className="mode-opt"
               aria-pressed={o.mode === leg.mode}
-              onClick={() => void patchCard(leg.from.id, { legMode: o.mode })}
+              onClick={() => setMode(o.mode)}
             >
               <span className={`leg-pill mode-${o.mode}`} style={{ border: 0, padding: 6 }}>
                 <ModeIcon mode={o.mode} size={18} />

@@ -259,6 +259,14 @@ h3 { font-size: 15px; }
 .empty { text-align: center; padding: 28px 16px; color: var(--muted); border: 2px dashed var(--border); border-radius: var(--radius); }
 .empty svg { color: var(--star-deep); }
 
+.place.hotel { text-decoration: none; color: inherit; background: var(--surface-2); box-shadow: none; border-style: dashed; }
+.place.hotel .name { font-size: 14px; }
+.hotel-thumb { width: 44px !important; height: 44px !important; background: var(--cheek-soft) !important; color: var(--cheek-ink) !important; }
+.day-body.slide-left { animation: slideL .22s ease; }
+.day-body.slide-right { animation: slideR .22s ease; }
+@keyframes slideL { from { transform: translateX(28px); opacity: .3; } }
+@keyframes slideR { from { transform: translateX(-28px); opacity: .3; } }
+
 /* ---------- Bottom sheet ---------- */
 .sheet-backdrop { position: fixed; inset: 0; z-index: 60; background: rgba(20, 18, 30, .38); animation: fade .18s ease; }
 .sheet {

@@ -1,7 +1,7 @@
 import { TRAVEL_MODES, type TravelMode } from '@ping/shared';
 import { useState } from 'react';
 import { MODE_LABEL } from '../../components/icons';
-import { Sheet } from '../../components/Sheet';
+import { Sheet, Toggle } from '../../components/Sheet';
 import type { DayInfo } from '../../data/model';
 import { resolveFromText } from '../../lib/api';
 import { dayLabel } from '../../lib/time';
@@ -36,7 +36,7 @@ export function DaySheet({ date, info, onClose }: { date: string; info: DayInfo;
       </label>
       <div className="grid-2">
         <label className="field">
-          <span>出發時間</span>
+          <span>出發時間（離開住宿）</span>
           <input className="input" type="time" value={d.startTime ?? '09:00'} onChange={(e) => setD({ ...d, startTime: e.target.value })} />
         </label>
         <label className="field">
@@ -67,6 +67,19 @@ export function DaySheet({ date, info, onClose }: { date: string; info: DayInfo;
           {d.lat.toFixed(4)}, {d.lng.toFixed(4)}
         </span>
       </label>
+      <div className="field">
+        <span>住宿（依住宿的入住 / 退房日期自動判斷）</span>
+        <div className="list">
+          <div className="list-item">
+            <span style={{ flex: 1 }}>從前一晚的住宿出發</span>
+            <Toggle label="從住宿出發" checked={d.startAtLodging !== false} onChange={(v) => setD({ ...d, startAtLodging: v })} />
+          </div>
+          <div className="list-item">
+            <span style={{ flex: 1 }}>最後回到當晚的住宿</span>
+            <Toggle label="回到住宿" checked={d.endAtLodging !== false} onChange={(v) => setD({ ...d, endAtLodging: v })} />
+          </div>
+        </div>
+      </div>
       <button className="btn primary block" onClick={() => void save()}>
         儲存
       </button>

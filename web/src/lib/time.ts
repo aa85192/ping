@@ -74,3 +74,9 @@ export function jstIso(date: string, minutes: number): string {
   const d = new Date(Date.parse(`${date}T00:00:00+09:00`) + minutes * 60000);
   return d.toISOString();
 }
+
+export function addDays(date: string, n: number): string {
+  const d = new Date(`${date}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + n);
+  return d.toISOString().slice(0, 10);
+}

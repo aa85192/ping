@@ -6,7 +6,8 @@ import type { Booking, BookingKind, DayInfo, Trip } from '../../data/model';
 import { tripDates } from '../../data/model';
 import type { TabId, WidgetId } from '../../lib/prefs';
 import { usePrefs } from '../../lib/prefs';
-import { buildSchedule, sortCards, toTarget } from '../../lib/schedule';
+import { dayAnchors } from '../../lib/lodging';
+import { buildSchedule, isAnchorId, sortCards, toTarget } from '../../lib/schedule';
 import { dayLabel, daysBetween, fromMinutes, shortDay, todayInTz, wallDate, wallTime } from '../../lib/time';
 import { tripWeather, weatherLabel, type DayWeather } from '../../lib/weather';
 import { useApp } from '../../store';
@@ -69,11 +70,11 @@ function Countdown({ trip }: { trip: Trip }) {
 }
 
 function Today({ trip, onNavigate }: { trip: Trip; onNavigate: (t: TabId) => void }) {
-  const { cards, legs, setPlanDay, setOpenCard } = useApp();
+  const { cards, bookings, legs, setPlanDay, setOpenCard } = useApp();
   const today = todayInTz();
   if (today < trip.startDate || today > trip.endDate) return null;
   const day = trip.days[today];
-  const sched = buildSchedule(today, sortCards(cards, today), day, trip, legs);
+  const sched = buildSchedule(today, sortCards(cards, today), day, trip, legs, dayAnchors(today, trip, bookings));
   return (
     <section className="card">
       <div className="card-head">
@@ -97,8 +98,8 @@ function Today({ trip, onNavigate }: { trip: Trip; onNavigate: (t: TabId) => voi
             <b className="num small" style={{ width: 44 }}>
               {fromMinutes(arrive)}
             </b>
-            <button className="btn ghost ellipsis" style={{ padding: 0, justifyContent: 'flex-start', flex: 1 }} onClick={() => setOpenCard(card.id)}>
-              {card.name}
+            <button className="btn ghost ellipsis" style={{ padding: 0, justifyContent: 'flex-start', flex: 1 }} onClick={() => !isAnchorId(card.id) && setOpenCard(card.id)}>
+              {isAnchorId(card.id) ? `🏠 ${card.name}` : card.name}
             </button>
             {leg && (
               <a className="btn sm" href={mapsDirectionsUrl(toTarget(leg.from), toTarget(leg.to), leg.mode)} target="_blank" rel="noreferrer" aria-label="導航到下一站">

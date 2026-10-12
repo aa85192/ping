@@ -121,4 +121,16 @@ describe('estimate', () => {
     const near = { lat: 34.6505, lng: 135.5013 };
     expect(estimateLeg(shinImamiya, near, 'TRANSIT').durationSec).toBe(estimateLeg(shinImamiya, near, 'WALK').durationSec);
   });
+  it('rail estimates are in a realistic range', () => {
+    const min = (a: { lat: number; lng: number }, b: { lat: number; lng: number }) => estimateLeg(a, b, 'TRANSIT').durationSec / 60;
+    const fushimiInari = { lat: 34.9671, lng: 135.7727 };
+    const shinOsaka = { lat: 34.7334, lng: 135.5001 };
+    const tokyo = { lat: 35.6812, lng: 139.7671 };
+    // JR via Osaka/Kyoto ≈ 55–70 min in reality.
+    expect(min(shinImamiya, fushimiInari)).toBeGreaterThan(55);
+    expect(min(shinImamiya, fushimiInari)).toBeLessThan(85);
+    // Hikari 新大阪→東京 ≈ 2h55.
+    expect(min(shinOsaka, tokyo)).toBeGreaterThan(150);
+    expect(min(shinOsaka, tokyo)).toBeLessThan(210);
+  });
 });

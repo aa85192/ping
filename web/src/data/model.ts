@@ -8,6 +8,11 @@ export interface DayInfo {
   startTime?: string;
   defaultMode?: TravelMode | null;
   title?: string;
+  /** Start / end the day at that night's lodging (default true). */
+  startAtLodging?: boolean;
+  endAtLodging?: boolean;
+  /** Travel mode for the leg from the lodging to the first stop. */
+  startLegMode?: TravelMode | null;
 }
 
 export interface TagDef {

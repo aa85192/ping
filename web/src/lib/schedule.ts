@@ -14,6 +14,8 @@ export interface LegPlan {
 
 export interface ScheduledCard {
   card: PlaceCard;
+  /** 'start' / 'end' = the day's lodging, not a real card. */
+  anchor: 'start' | 'end' | null;
   arrive: number;
   depart: number;
   /** Planned start exists but the estimated arrival is later. */
@@ -55,12 +57,18 @@ export function canRoute(c: PlaceCard): boolean {
   return Boolean(c.placeId || c.location);
 }
 
+export interface DayAnchors {
+  start?: PlaceCard;
+  end?: PlaceCard;
+}
+
 export function buildSchedule(
   date: string,
-  ordered: PlaceCard[],
+  cards: PlaceCard[],
   day: DayInfo | undefined,
   trip: Trip,
   legs: Record<string, RouteResponse | 'loading' | undefined>,
+  anchors: DayAnchors = {},
 ): DaySchedule {
   const startMin = toMinutes(day?.startTime) ?? 9 * 60;
   let t = startMin;
@@ -68,12 +76,15 @@ export function buildSchedule(
   let travelMin = 0;
   let incomplete = false;
   const items: ScheduledCard[] = [];
+  // Hotel anchors only make sense around at least one real stop.
+  const ordered = cards.length ? [...(anchors.start ? [anchors.start] : []), ...cards, ...(anchors.end ? [anchors.end] : [])] : [];
 
   ordered.forEach((card, i) => {
-    const planned = toMinutes(card.plannedStart);
+    const anchor = card === anchors.start ? 'start' : card === anchors.end ? 'end' : null;
+    const planned = anchor ? null : toMinutes(card.plannedStart);
     const arrive = planned ?? t;
     const lateBy = planned != null && i > 0 && t > planned + 5 ? t - planned : 0;
-    const stay = card.stayMinutes ?? DEFAULT_STAY;
+    const stay = anchor ? 0 : card.stayMinutes ?? DEFAULT_STAY;
     const depart = arrive + stay;
     stayMin += stay;
     const next = ordered[i + 1];
@@ -103,7 +114,7 @@ export function buildSchedule(
         } else incomplete = true;
       } else incomplete = true;
     }
-    items.push({ card, arrive, depart, lateBy, leg });
+    items.push({ card, anchor, arrive, depart, lateBy, leg });
   });
 
   return { items, startMin, endMin: items.length ? items[items.length - 1].depart : startMin, stayMin, travelMin, incomplete };
@@ -116,6 +127,8 @@ export function orderBetween(before: number | undefined, after: number | undefin
   if (after == null) return before + 1000;
   return (before + after) / 2;
 }
+
+export const isAnchorId = (id: string) => id.startsWith('lodging:');
 
 export function toTarget(c: Pick<PlaceCard, 'name' | 'placeId' | 'location'>) {
   return { name: c.name, placeId: c.placeId ?? undefined, location: c.location ?? undefined };
