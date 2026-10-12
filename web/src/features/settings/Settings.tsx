@@ -183,6 +183,10 @@ function TripSection() {
           <input className="input num" type="number" min={1} defaultValue={trip.travelers} onBlur={(e) => void patchTrip({ travelers: Number(e.target.value) || 1 })} />
         </label>
         <label className="field">
+          <span>預算（NT$，兩人合計）</span>
+          <input className="input num" type="number" min={0} step={1000} defaultValue={trip.budget ?? ''} placeholder="例如 82500" onBlur={(e) => void patchTrip({ budget: e.target.value ? Number(e.target.value) : null })} />
+        </label>
+        <label className="field">
           <span>匯率 ¥1 = NT$</span>
           <input className="input num" type="number" step="0.001" defaultValue={trip.fxRate} onBlur={(e) => void patchTrip({ fxRate: Number(e.target.value) || trip.fxRate })} />
         </label>
@@ -286,7 +290,7 @@ function SharingSection() {
 
 export function Settings() {
   const prefs = usePrefs();
-  const { trip, cards, bookings, trips, openTrip, repo } = useApp();
+  const { trip, cards, bookings, expenses, trips, openTrip, repo } = useApp();
   return (
     <>
       <header className="topbar">
@@ -328,7 +332,7 @@ export function Settings() {
               </select>
             </label>
           )}
-          <button className="btn" onClick={() => trip && exportTripJson(trip, cards, bookings)}>
+          <button className="btn" onClick={() => trip && exportTripJson(trip, cards, bookings, expenses)}>
             <Download size={16} /> 匯出備份（JSON）
           </button>
           <button className="btn" onClick={() => useApp.setState({ phase: 'pick' })}>

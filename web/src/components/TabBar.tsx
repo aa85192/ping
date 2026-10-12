@@ -1,4 +1,4 @@
-import { CalendarDays, House, Inbox, Map, Settings } from 'lucide-react';
+import { CalendarDays, House, Inbox, Map, Settings, Wallet } from 'lucide-react';
 import type { ComponentType } from 'react';
 import { TAB_LABEL, usePrefs, type TabId } from '../lib/prefs';
 
@@ -6,6 +6,7 @@ const ICON: Record<TabId, ComponentType<{ size?: number; strokeWidth?: number }>
   home: House,
   plan: CalendarDays,
   map: Map,
+  money: Wallet,
   inbox: Inbox,
   settings: Settings,
 };

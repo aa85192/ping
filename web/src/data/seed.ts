@@ -10,6 +10,7 @@ export function osakaTripSeed(): { trip: Trip; bookings: Booking[]; cards: Place
   const trip: Trip = {
     id: newId('trip_'),
     name: '大阪 × 東京迪士尼 2026',
+    budget: 82500,
     startDate: '2026-10-24',
     endDate: '2026-10-31',
     travelers: 2,

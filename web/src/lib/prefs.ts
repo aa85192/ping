@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import type { ThemeOverrides } from '../theme/tokens';
 
-export type TabId = 'home' | 'plan' | 'map' | 'inbox' | 'settings';
+export type TabId = 'home' | 'plan' | 'map' | 'money' | 'inbox' | 'settings';
 export type WidgetId = 'countdown' | 'today' | 'flights' | 'lodging' | 'weather' | 'tours';
 export type CardField = 'photo' | 'rating' | 'hours' | 'address' | 'time' | 'memos' | 'tags';
 export type ThemeMode = 'system' | 'light' | 'dark';
@@ -11,6 +11,7 @@ export const TAB_LABEL: Record<TabId, string> = {
   home: '總覽',
   plan: '行程',
   map: '地圖',
+  money: '花費',
   inbox: '收集箱',
   settings: '設定',
 };
@@ -33,6 +34,8 @@ export const CARD_FIELD_LABEL: Record<CardField, string> = {
   memos: 'Memo 數',
   tags: '標籤',
 };
+
+const ALL_TABS: TabId[] = ['home', 'plan', 'map', 'money', 'inbox', 'settings'];
 
 export interface Toggle<T> {
   id: T;
@@ -69,12 +72,25 @@ export const usePrefs = create<PrefsState>()(
     (set) => ({
       themeMode: 'system',
       overrides: {},
-      tabs: (['home', 'plan', 'map', 'inbox', 'settings'] as TabId[]).map((id) => ({ id, visible: true })),
+      tabs: ALL_TABS.map((id) => ({ id, visible: true })),
       widgets: (['countdown', 'today', 'flights', 'lodging', 'weather', 'tours'] as WidgetId[]).map((id) => ({ id, visible: true })),
       cardFields: { photo: true, rating: true, hours: true, address: false, time: true, memos: true, tags: true },
       activeTripId: null,
       set: (p) => set(p),
     }),
-    { name: 'ping:prefs', storage: safeStorage, version: 1 },
+    {
+      name: 'ping:prefs',
+      storage: safeStorage,
+      version: 2,
+      // v2 added the 花費 tab: insert it after 地圖 for people who already customised their tabs.
+      migrate: (state, version) => {
+        const s = state as PrefsState;
+        if (version < 2 && s.tabs && !s.tabs.some((t) => t.id === 'money')) {
+          const i = s.tabs.findIndex((t) => t.id === 'map');
+          s.tabs.splice(i < 0 ? s.tabs.length - 1 : i + 1, 0, { id: 'money', visible: true });
+        }
+        return s;
+      },
+    },
   ),
 );

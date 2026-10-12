@@ -1,4 +1,4 @@
-import type { Booking, MemberProfile, PlaceCard, Trip, TripSnapshot } from './model';
+import type { Booking, Expense, MemberProfile, PlaceCard, Trip, TripSnapshot } from './model';
 
 export interface TripSummary {
   id: string;
@@ -10,7 +10,7 @@ export interface TripSummary {
 export interface Repo {
   kind: 'local' | 'cloud';
   listTrips(): Promise<TripSummary[]>;
-  createTrip(seed: { trip: Trip; cards: PlaceCard[]; bookings: Booking[] }): Promise<string>;
+  createTrip(seed: { trip: Trip; cards: PlaceCard[]; bookings: Booking[]; expenses?: Expense[] }): Promise<string>;
   /** Join a shared trip with its invite code (cloud only). */
   joinTrip(tripId: string, code: string, profile: MemberProfile): Promise<void>;
   subscribe(tripId: string, cb: (snap: TripSnapshot) => void, onError?: (e: Error) => void): () => void;
@@ -20,6 +20,8 @@ export interface Repo {
   deleteCard(tripId: string, id: string): Promise<void>;
   putBooking(tripId: string, booking: Booking): Promise<void>;
   deleteBooking(tripId: string, id: string): Promise<void>;
+  putExpense(tripId: string, expense: Expense): Promise<void>;
+  deleteExpense(tripId: string, id: string): Promise<void>;
   deleteTrip(tripId: string): Promise<void>;
 }
 

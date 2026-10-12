@@ -17,7 +17,7 @@ import {
   type Firestore,
 } from 'firebase/firestore';
 import { getFirebase } from './firebase';
-import type { Booking, PlaceCard, Trip, TripSnapshot } from './model';
+import type { Booking, Expense, PlaceCard, Trip, TripSnapshot } from './model';
 import type { Repo } from './repo';
 import { stripUndefined } from './repo';
 
@@ -52,6 +52,7 @@ export async function createCloudRepo(): Promise<Repo> {
   const tripRef = (id: string) => doc(db, 'trips', id);
   const cardRef = (t: string, id: string) => doc(db, 'trips', t, 'cards', id);
   const bookingRef = (t: string, id: string) => doc(db, 'trips', t, 'bookings', id);
+  const expenseRef = (t: string, id: string) => doc(db, 'trips', t, 'expenses', id);
 
   return {
     kind: 'cloud',
@@ -62,7 +63,7 @@ export async function createCloudRepo(): Promise<Repo> {
         return { id: d.id, name: t.name, startDate: t.startDate, endDate: t.endDate };
       });
     },
-    async createTrip({ trip, cards, bookings }) {
+    async createTrip({ trip, cards, bookings, expenses = [] }) {
       const me = auth.currentUser!;
       const full: Trip = {
         ...trip,
@@ -76,6 +77,7 @@ export async function createCloudRepo(): Promise<Repo> {
       const batch = writeBatch(db);
       for (const c of cards) batch.set(cardRef(trip.id, c.id), withoutNulls(stripUndefined(c)));
       for (const b of bookings) batch.set(bookingRef(trip.id, b.id), withoutNulls(stripUndefined(b)));
+      for (const e of expenses) batch.set(expenseRef(trip.id, e.id), withoutNulls(stripUndefined(e)));
       await batch.commit();
       return trip.id;
     },
@@ -87,15 +89,19 @@ export async function createCloudRepo(): Promise<Repo> {
       });
     },
     subscribe(tripId, cb, onError) {
-      const state: TripSnapshot = { trip: null, cards: [], bookings: [] };
+      const state: TripSnapshot = { trip: null, cards: [], bookings: [], expenses: [] };
       let ready = 0;
-      const push = () => ready >= 3 && cb({ ...state });
+      let tripReady = false;
+      const push = () => ready >= 4 && cb({ ...state });
       const err = (e: Error) => onError?.(e);
       const u1 = onSnapshot(
         tripRef(tripId),
         (d) => {
           state.trip = d.exists() ? ({ ...(d.data() as Trip), id: d.id } as Trip) : null;
-          if (ready < 3) ready++;
+          if (!tripReady) {
+            tripReady = true;
+            ready++;
+          }
           push();
         },
         err,
@@ -126,10 +132,24 @@ export async function createCloudRepo(): Promise<Repo> {
         },
         err,
       );
+      let expensesReady = false;
+      const u4 = onSnapshot(
+        collection(db, 'trips', tripId, 'expenses'),
+        (s) => {
+          state.expenses = s.docs.map((d) => ({ ...(d.data() as Expense), id: d.id }));
+          if (!expensesReady) {
+            expensesReady = true;
+            ready++;
+          }
+          push();
+        },
+        err,
+      );
       return () => {
         u1();
         u2();
         u3();
+        u4();
       };
     },
     async patchTrip(tripId, patch) {
@@ -150,9 +170,15 @@ export async function createCloudRepo(): Promise<Repo> {
     async deleteBooking(tripId, id) {
       await deleteDoc(bookingRef(tripId, id));
     },
+    async putExpense(tripId, expense) {
+      await setDoc(expenseRef(tripId, expense.id), withoutNulls(stripUndefined({ ...expense, updatedAt: Date.now() })));
+    },
+    async deleteExpense(tripId, id) {
+      await deleteDoc(expenseRef(tripId, id));
+    },
     async deleteTrip(tripId) {
       const batch = writeBatch(db);
-      for (const sub of ['cards', 'bookings']) {
+      for (const sub of ['cards', 'bookings', 'expenses']) {
         const s = await getDocs(collection(db, 'trips', tripId, sub));
         s.docs.forEach((d) => batch.delete(d.ref));
       }

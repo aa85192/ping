@@ -1,4 +1,4 @@
-import type { Booking, PlaceCard, Trip, TripSnapshot } from './model';
+import type { Booking, Expense, PlaceCard, Trip, TripSnapshot } from './model';
 import type { Repo, TripSummary } from './repo';
 import { stripUndefined } from './repo';
 
@@ -11,6 +11,7 @@ interface Stored {
   trip: Trip;
   cards: Record<string, PlaceCard>;
   bookings: Record<string, Booking>;
+  expenses?: Record<string, Expense>;
 }
 
 function readIndex(): string[] {
@@ -33,8 +34,8 @@ function read(id: string): Stored | null {
 const listeners = new Map<string, Set<(s: TripSnapshot) => void>>();
 
 function toSnapshot(s: Stored | null): TripSnapshot {
-  if (!s) return { trip: null, cards: [], bookings: [] };
-  return { trip: s.trip, cards: Object.values(s.cards), bookings: Object.values(s.bookings) };
+  if (!s) return { trip: null, cards: [], bookings: [], expenses: [] };
+  return { trip: s.trip, cards: Object.values(s.cards), bookings: Object.values(s.bookings), expenses: Object.values(s.expenses ?? {}) };
 }
 
 function emit(id: string) {
@@ -74,11 +75,12 @@ export const localRepo: Repo = {
       .filter((t): t is Trip => Boolean(t))
       .map<TripSummary>((t) => ({ id: t.id, name: t.name, startDate: t.startDate, endDate: t.endDate }));
   },
-  async createTrip({ trip, cards, bookings }) {
+  async createTrip({ trip, cards, bookings, expenses = [] }) {
     const stored: Stored = {
       trip: stripUndefined(trip),
       cards: Object.fromEntries(cards.map((c) => [c.id, stripUndefined(c)])),
       bookings: Object.fromEntries(bookings.map((b) => [b.id, stripUndefined(b)])),
+      expenses: Object.fromEntries(expenses.map((e) => [e.id, stripUndefined(e)])),
     };
     localStorage.setItem(KEY(trip.id), JSON.stringify(stored));
     localStorage.setItem(INDEX, JSON.stringify([...new Set([...readIndex(), trip.id])]));
@@ -113,6 +115,12 @@ export const localRepo: Repo = {
   },
   async deleteBooking(tripId, id) {
     write(tripId, (s) => delete s.bookings[id]);
+  },
+  async putExpense(tripId, expense) {
+    write(tripId, (s) => ((s.expenses ??= {})[expense.id] = stripUndefined({ ...expense, updatedAt: Date.now() })));
+  },
+  async deleteExpense(tripId, id) {
+    write(tripId, (s) => delete s.expenses?.[id]);
   },
   async deleteTrip(tripId) {
     localStorage.removeItem(KEY(tripId));

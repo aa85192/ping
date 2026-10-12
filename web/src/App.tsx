@@ -7,6 +7,7 @@ import { Dashboard } from './features/dashboard/Dashboard';
 import { Inbox } from './features/inbox/Inbox';
 import { Plan } from './features/itinerary/Plan';
 import { MapView } from './features/map/MapView';
+import { Money } from './features/money/Money';
 import { PickTrip, SignIn } from './features/onboarding/Onboarding';
 import { Settings } from './features/settings/Settings';
 import type { TabId } from './lib/prefs';
@@ -14,7 +15,7 @@ import { usePrefetchLegs } from './lib/prefetch';
 import { useApplyTheme } from './lib/useTheme';
 import { useApp } from './store';
 
-const TABS: TabId[] = ['home', 'plan', 'map', 'inbox', 'settings'];
+const TABS: TabId[] = ['home', 'plan', 'map', 'money', 'inbox', 'settings'];
 
 function readHash(): TabId {
   const h = location.hash.replace(/^#\/?/, '') as TabId;
@@ -89,6 +90,7 @@ export function App() {
       {tab === 'home' && <Dashboard onNavigate={go} />}
       {tab === 'plan' && <Plan />}
       {tab === 'map' && <MapView />}
+      {tab === 'money' && <Money />}
       {tab === 'inbox' && <Inbox />}
       {tab === 'settings' && <Settings />}
       {openCardId && <CardSheet cardId={openCardId} />}

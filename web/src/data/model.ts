@@ -44,6 +44,8 @@ export interface Trip {
   members?: string[];
   memberProfiles?: Record<string, MemberProfile>;
   inviteCode?: string;
+  /** Total budget in the home currency (TWD). */
+  budget?: number | null;
   updatedAt?: number;
 }
 
@@ -89,6 +91,8 @@ export interface Booking {
   amount?: Money | null;
   note?: string | null;
   deadline?: string | null;
+  /** Who paid (member uid); used to settle up between travellers. */
+  paidBy?: string | null;
   updatedAt?: number;
 }
 
@@ -127,10 +131,31 @@ export interface PlaceCard {
   updatedAt?: number;
 }
 
+export type ExpenseCategory = 'food' | 'transport' | 'shopping' | 'ticket' | 'stay' | 'drugstore' | 'other';
+export type PayMethod = 'cash' | 'card' | 'ic' | 'mobile';
+
+export interface Expense {
+  id: string;
+  /** 'YYYY-MM-DD' */
+  date: string;
+  title: string;
+  amount: number;
+  currency: 'JPY' | 'TWD';
+  category: ExpenseCategory;
+  /** Member uid (cloud) or 'me' (single-device). */
+  paidBy: string;
+  /** even = split across all travellers; solo = only the payer's own spending. */
+  split: 'even' | 'solo';
+  method?: PayMethod | null;
+  createdAt: number;
+  updatedAt?: number;
+}
+
 export interface TripSnapshot {
   trip: Trip | null;
   cards: PlaceCard[];
   bookings: Booking[];
+  expenses: Expense[];
 }
 
 export function newId(prefix = ''): string {

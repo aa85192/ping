@@ -3,7 +3,7 @@ import type { RouteRequest, RouteResponse } from '@ping/shared';
 import { classifyLink } from '@ping/shared';
 import { cloudEnabled, signInWithGoogle, signOutUser, watchUser } from './data/firebase';
 import { localRepo } from './data/localRepo';
-import type { Booking, Memo, PlaceCard, Trip } from './data/model';
+import type { Booking, Expense, Memo, PlaceCard, Trip } from './data/model';
 import { newId } from './data/model';
 import type { Repo, TripSummary } from './data/repo';
 import { fetchRoute, resolveFromText } from './lib/api';
@@ -35,6 +35,7 @@ interface AppState {
   trip: Trip | null;
   cards: PlaceCard[];
   bookings: Booking[];
+  expenses: Expense[];
   legs: Record<string, RouteResponse | 'loading' | undefined>;
   toast: Toast | null;
   openCardId: string | null;
@@ -44,7 +45,7 @@ interface AppState {
   signIn: () => Promise<void>;
   signOut: () => Promise<void>;
   openTrip: (id: string) => void;
-  createTrip: (seed: { trip: Trip; cards: PlaceCard[]; bookings: Booking[] }) => Promise<void>;
+  createTrip: (seed: { trip: Trip; cards: PlaceCard[]; bookings: Booking[]; expenses?: Expense[] }) => Promise<void>;
   showToast: (text: string, action?: Toast['action']) => void;
   setOpenCard: (id: string | null) => void;
   setPlanDay: (d: string | null) => void;
@@ -60,6 +61,8 @@ interface AppState {
   deleteMemo: (cardId: string, memoId: string) => Promise<void>;
   putBooking: (b: Booking) => Promise<void>;
   deleteBooking: (id: string) => Promise<void>;
+  putExpense: (e: Expense) => Promise<void>;
+  deleteExpense: (id: string) => Promise<void>;
   ensureLeg: (key: string, req: RouteRequest) => void;
 }
 
@@ -166,6 +169,7 @@ export const useApp = create<AppState>()((set, get) => {
     trip: null,
     cards: [],
     bookings: [],
+    expenses: [],
     legs: loadLegCache(),
     toast: null,
     openCardId: null,
@@ -221,7 +225,7 @@ export const useApp = create<AppState>()((set, get) => {
             set({ phase: 'pick', trip: null });
             return;
           }
-          set({ trip: snap.trip, cards: snap.cards, bookings: snap.bookings, phase: 'ready' });
+          set({ trip: snap.trip, cards: snap.cards, bookings: snap.bookings, expenses: snap.expenses, phase: 'ready' });
         },
         (e) => set({ phase: 'error', error: e.message }),
       );
@@ -386,6 +390,18 @@ export const useApp = create<AppState>()((set, get) => {
       const b = get().bookings.find((x) => x.id === id);
       await repo.deleteBooking(tripId, id);
       if (b) get().showToast(`已刪除「${b.title}」`, { label: '復原', run: () => void repo.putBooking(tripId, b) });
+    }),
+
+    putExpense: (e) => guard(async () => {
+      const { repo, tripId } = need();
+      await repo.putExpense(tripId, e);
+    }),
+
+    deleteExpense: (id) => guard(async () => {
+      const { repo, tripId } = need();
+      const e = get().expenses.find((x) => x.id === id);
+      await repo.deleteExpense(tripId, id);
+      if (e) get().showToast(`已刪除「${e.title}」`, { label: '復原', run: () => void repo.putExpense(tripId, e) });
     }),
 
     ensureLeg(key, req) {

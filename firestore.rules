@@ -25,7 +25,7 @@ service cloud.firestore {
       allow delete: if signedIn() && resource.data.ownerUid == request.auth.uid;
 
       match /{sub}/{docId} {
-        allow read, write: if sub in ['cards', 'bookings'] && isMember(tripId);
+        allow read, write: if sub in ['cards', 'bookings', 'expenses'] && isMember(tripId);
       }
     }
   }

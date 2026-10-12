@@ -278,6 +278,16 @@ h3 { font-size: 15px; }
 @keyframes slideL { from { transform: translateX(28px); opacity: .3; } }
 @keyframes slideR { from { transform: translateX(-28px); opacity: .3; } }
 
+/* ---------- Money ---------- */
+.bars { display: flex; flex-direction: column; gap: 8px; }
+.bar-row { display: grid; grid-template-columns: 76px 1fr auto; align-items: center; gap: 10px; }
+.bar-label { font-size: 13px; white-space: nowrap; }
+.bar-track { height: 10px; display: block; }
+.bar-fill { display: block; height: 100%; min-width: 4px; border-radius: 0 4px 4px 0; background: var(--sky-ink); }
+.bar-value { font-size: 13px; text-align: right; min-width: 72px; }
+.amount-input { font-size: 32px; font-weight: 700; font-family: var(--font-round); text-align: right; min-height: 64px; }
+.cat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+
 /* ---------- Bottom sheet ---------- */
 .sheet-backdrop { position: fixed; inset: 0; z-index: 60; background: rgba(20, 18, 30, .38); animation: fade .18s ease; }
 .sheet {
