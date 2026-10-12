@@ -1,4 +1,4 @@
-import type { LatLng, LinkRef, OpeningPeriod, Status, TravelMode } from '@ping/shared';
+import type { FlightStatus, LatLng, LinkRef, OpeningPeriod, Status, TravelMode } from '@ping/shared';
 
 export interface DayInfo {
   city: string;
@@ -64,6 +64,8 @@ export interface FlightInfo {
   durationText?: string;
   terminalNote?: string;
   baggage?: string;
+  /** Latest AI-looked-up status (terminal, gate, baggage belt…), shared by both travellers. */
+  live?: FlightStatus | null;
 }
 
 export interface LodgingInfo {

@@ -12,6 +12,7 @@ import { dayLabel, daysBetween, fromMinutes, shortDay, todayInTz, wallDate, wall
 import { tripWeather, weatherLabel, type DayWeather } from '../../lib/weather';
 import { useApp } from '../../store';
 import { BookingSheet, emptyBooking, STATUS_LABEL } from '../booking/BookingSheet';
+import { FlightLive } from './FlightLive';
 
 export function dayInfoFor(trip: Trip, date: string, lodging?: Booking): DayInfo {
   const d = trip.days[date];
@@ -151,6 +152,7 @@ function Flights({ list, onEdit }: { list: Booking[]; onEdit: (b: Booking) => vo
               <div className="time num">{b.end ? wallTime(b.end) : ''}</div>
             </div>
           </div>
+          <FlightLive b={b} />
           {b.flight?.baggage && <div className="note" style={{ marginTop: 8 }}>🧳 {b.flight.baggage}</div>}
           {b.flight?.terminalNote && (
             <div className="note" style={{ marginTop: 4 }}>

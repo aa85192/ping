@@ -5,6 +5,8 @@ import {
   isShortMapsUrl,
   mapsPlaceUrl,
   parseMapsUrl,
+  type FlightStatus,
+  type FlightStatusRequest,
   type LinkPreviewResponse,
   type OEmbedResponse,
   type ResolvedPlace,
@@ -121,5 +123,14 @@ export async function fetchLinkPreview(url: string): Promise<LinkPreviewResponse
     return await call<LinkPreviewResponse>(`/api/link-preview?url=${encodeURIComponent(url)}`);
   } catch (e) {
     return { error: String(e) };
+  }
+}
+
+export async function fetchFlightStatus(req: FlightStatusRequest): Promise<FlightStatus | null> {
+  if (!apiEnabled) return null;
+  try {
+    return await call<FlightStatus>('/api/flight-status', { method: 'POST', body: JSON.stringify(req) });
+  } catch {
+    return null;
   }
 }

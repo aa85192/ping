@@ -174,6 +174,14 @@ h3 { font-size: 15px; }
 .boarding .mid { text-align: center; color: var(--muted); font-size: 12px; }
 .boarding .end { text-align: right; }
 .dashed { border-top: 1px dashed var(--border); margin: 12px -14px; }
+.live { margin-top: 10px; background: var(--surface-2); border-radius: 12px; padding: 8px 10px; cursor: default; }
+.live-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; text-align: center; }
+.live-meta { margin-top: 6px; gap: 4px 8px; }
+.live-meta > * { white-space: nowrap; }
+.live-cell { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.live-cell b { font-size: 16px; font-family: var(--font-round); }
+.spin { animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
 .flight + .flight { margin-top: 14px; padding-top: 14px; border-top: 1px dashed var(--border); }
 .note { font-size: 13px; color: var(--muted); display: flex; gap: 6px; align-items: flex-start; }
 .note svg { flex: none; margin-top: 2px; }

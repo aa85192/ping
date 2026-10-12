@@ -101,3 +101,31 @@ export interface LinkPreviewResponse {
   siteName?: string;
   error?: string;
 }
+
+export interface FlightStatusRequest {
+  flightNo: string;
+  airline?: string;
+  from: string;
+  to: string;
+  /** Scheduled times as ISO with the local offset, e.g. 2026-10-24T14:10:00+08:00 */
+  departure: string;
+  arrival?: string;
+}
+
+export type FlightPhase = 'scheduled' | 'on-time' | 'delayed' | 'boarding' | 'departed' | 'landed' | 'cancelled' | 'unknown';
+
+export interface FlightStatus {
+  status: FlightPhase;
+  depTerminal: string | null;
+  depGate: string | null;
+  /** 'HH:mm' local time */
+  depEstimated: string | null;
+  arrTerminal: string | null;
+  baggageBelt: string | null;
+  arrEstimated: string | null;
+  note: string | null;
+  confident: boolean;
+  sources: RouteSource[];
+  fetchedAt: number;
+  error?: string;
+}

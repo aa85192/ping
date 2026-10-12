@@ -1,4 +1,5 @@
-import type { RouteRequest } from '@ping/shared';
+import type { FlightStatusRequest, RouteRequest } from '@ping/shared';
+import { askFlightStatus, flightCacheTtlSec } from './flightAi';
 import { linkPreview, oembed } from './meta';
 import { resolvePlace } from './resolve';
 import { computeRoute } from './route';
@@ -83,6 +84,16 @@ export async function handleApi(req: ApiRequest, deps: ApiDeps): Promise<ApiResu
         },
         (v) => v.source === 'routes-api' || v.source === 'ai' || v.error === 'no-route',
       );
+      return { status: 200, json: res };
+    }
+
+    case '/api/flight-status': {
+      if (req.method !== 'POST') break;
+      const r = body as unknown as FlightStatusRequest;
+      if (!r.flightNo || !r.departure || !r.from || !r.to) return { status: 400, json: { error: 'flightNo, from, to, departure required' } };
+      if (!deps.gemini) return { status: 503, json: { error: 'ai-disabled' } };
+      const key = `flight:v1:${r.flightNo.toUpperCase()}:${r.departure.slice(0, 10)}`;
+      const res = await cached(deps.cache, key, flightCacheTtlSec(r), () => askFlightStatus(r, deps.gemini!, deps.geminiModel, f), (v) => !v.error);
       return { status: 200, json: res };
     }
 
