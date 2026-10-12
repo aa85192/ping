@@ -13,7 +13,7 @@ export interface Cache {
 
 export interface ApiDeps {
   mapsKey?: string;
-  /** Gemini API key (can be the same key as Maps if Generative Language API is allowed on it). */
+  /** Gemini API key (secret GEMINI_API_KEY, restricted to Generative Language API). */
   geminiKey?: string;
   geminiModel?: string;
   metaToken?: string;

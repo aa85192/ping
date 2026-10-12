@@ -89,7 +89,7 @@ npx firebase-tools deploy             # 會自動 build 網站與 function，並
 
 Routes API 不提供日本的大眾運輸路線（[官方 FAQ](https://developers.google.com/maps/faq?csw=1)）。查不到時，function 會改問 Gemini（開啟 Google 搜尋），整理出時間、路線、票價和參考來源，結果快取 7 天。查詢失敗才退回距離估算。
 
-- 需要在專案啟用 **Generative Language API**，並把它加進 `ping-server` 金鑰的 API 限制（共用同一把金鑰）。
+- 需要在專案啟用 **Generative Language API**，另建一把只限 Generative Language API 的金鑰，存成 secret：`npx firebase-tools functions:secrets:set GEMINI_API_KEY`。
 - 模型預設 `gemini-3.8-flash`；要換的話建立 `functions/.env` 寫 `GEMINI_MODEL=…` 後重新部署。
 - 要關掉：`functions/.env` 寫 `DISABLE_TRANSIT_AI=true`。
 

@@ -9,6 +9,7 @@ import { handleApi, type Cache } from './api';
 initializeApp();
 
 const MAPS_KEY = defineSecret('GOOGLE_MAPS_SERVER_KEY');
+const GEMINI_KEY = defineSecret('GEMINI_API_KEY');
 
 /** Server-side cache in Firestore (clients can't read it: no rule matches apiCache). */
 const firestoreCache: Cache = {
@@ -35,7 +36,7 @@ const isEmulator = process.env.FUNCTIONS_EMULATOR === 'true';
 export const api = onRequest(
   {
     region: 'asia-east1',
-    secrets: [MAPS_KEY],
+    secrets: [MAPS_KEY, GEMINI_KEY],
     memory: '256MiB',
     timeoutSeconds: 60, // grounded Gemini lookups can take ~10–20 s
     maxInstances: 3, // two travellers; also caps the bill if a token ever leaks
@@ -58,8 +59,7 @@ export const api = onRequest(
         { method: req.method, path: req.path, query: req.query as Record<string, string | undefined>, body: req.body },
         {
           mapsKey: MAPS_KEY.value() || undefined,
-          // Same key, with "Generative Language API" added to its API restrictions.
-          geminiKey: process.env.DISABLE_TRANSIT_AI === 'true' ? undefined : MAPS_KEY.value() || undefined,
+          geminiKey: process.env.DISABLE_TRANSIT_AI === 'true' ? undefined : GEMINI_KEY.value() || undefined,
           geminiModel: process.env.GEMINI_MODEL || undefined,
           metaToken: process.env.META_ACCESS_TOKEN,
           cache: firestoreCache,
