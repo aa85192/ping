@@ -1,12 +1,12 @@
 {
   "name": "ping",
   "private": true,
-  "workspaces": ["shared", "web", "worker"],
+  "workspaces": ["shared", "web", "functions"],
   "scripts": {
     "dev": "npm run dev -w web",
-    "dev:worker": "npm run dev -w worker",
+    "build:functions": "npm run build -w functions",
     "build": "npm run build -w web",
-    "test": "npm run test -w shared && npm run test -w worker",
-    "typecheck": "npm run typecheck -w shared && npm run typecheck -w worker && npm run typecheck -w web"
+    "test": "npm run test -w shared && npm run test -w functions",
+    "typecheck": "npm run typecheck -w shared && npm run typecheck -w functions && npm run typecheck -w web"
   }
 }

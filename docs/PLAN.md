@@ -10,6 +10,7 @@
 
 - **兩人共編進 MVP**：資料層改為 Firebase（Google 登入 + Firestore 離線快取 + 即時同步），未設定 Firebase 時自動退回單機模式（localStorage）。卡片用 fractional order，兩人同時排序不會互相覆蓋整份清單。
 - **手機為主**、**分頁放在手機畫面最底部**（GitHub mobile 樣式：icon + 文字 + 計數徽章，目前分頁以星光黃膠囊標示）。
+- **只用 Google Cloud 額度**（2026-10-12）：Cloudflare Worker 改成 Firebase Cloud Function（`asia-east1`），網站改放 Firebase Hosting，`/api/**` 同源轉給 function；伺服器金鑰放 Secret Manager，API 結果快取在 Firestore `apiCache`。所有費用走同一個帳單帳戶。
 - **星星人色號**：POP MART 未公開官方色號，採用 `web/src/theme/tokens.ts` 的固定色票（白天 / 夜空兩組，文字組合皆 ≥ WCAG AA 4.5:1），設定頁可從公仔照片取色覆寫。
 
 | 色名 | 白天 | 夜空 | 用途 |

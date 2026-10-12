@@ -12,10 +12,13 @@ import {
   type RouteRequest,
   type RouteResponse,
 } from '@ping/shared';
-import { getIdToken } from '../data/firebase';
+import { cloudEnabled, getIdToken } from '../data/firebase';
 
-const BASE = ((import.meta.env.VITE_API_BASE as string | undefined) ?? '').replace(/\/$/, '');
-export const apiEnabled = Boolean(BASE);
+// With Firebase configured the API is same-origin (/api/* is rewritten to the
+// Cloud Function by Firebase Hosting, and proxied to the emulator in dev).
+const OVERRIDE = (import.meta.env.VITE_API_BASE as string | undefined)?.replace(/\/$/, '');
+const BASE = OVERRIDE ?? '';
+export const apiEnabled = cloudEnabled || Boolean(OVERRIDE);
 
 async function call<T>(path: string, init: RequestInit = {}): Promise<T> {
   const token = await getIdToken();

@@ -1,6 +1,8 @@
 node_modules/
 dist/
-.wrangler/
+functions/deploy/
+.firebase/
+*-debug.log
 .dev.vars
 .env
 .env.local

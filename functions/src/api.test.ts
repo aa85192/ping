@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import { handleApi } from './api';
 import { expandUrl, resolvePlace } from './resolve';
 import { computeRoute } from './route';
 import { readOgTags } from './meta';
@@ -98,5 +99,43 @@ describe('readOgTags', () => {
   it('reads og tags in either attribute order', () => {
     const html = `<head><meta property="og:title" content="Apartment Hotel 11 &amp; Co"><meta content="https://img/x.jpg" property="og:image"></head>`;
     expect(readOgTags(html)).toMatchObject({ title: 'Apartment Hotel 11 & Co', image: 'https://img/x.jpg' });
+  });
+});
+
+describe('handleApi', () => {
+  const memCache = () => {
+    const m = new Map<string, unknown>();
+    return {
+      store: m,
+      async get<T>(k: string) {
+        return (m.get(k) as T) ?? null;
+      },
+      async set(k: string, v: unknown) {
+        m.set(k, v);
+      },
+    };
+  };
+
+  it('routes regardless of the path prefix and caches only real API results', async () => {
+    const cache = memCache();
+    const f = vi.fn(async () => res({ routes: [{ duration: '600s', distanceMeters: 800 }] }));
+    const body = { origin: { placeId: 'A' }, destination: { placeId: 'B' }, mode: 'WALK' };
+    const r1 = await handleApi({ method: 'POST', path: '/ping/asia-east1/api/api/route', query: {}, body }, { mapsKey: 'K', cache, fetchImpl: f as unknown as typeof fetch });
+    expect(r1).toMatchObject({ status: 200, json: { durationSec: 600, source: 'routes-api' } });
+    await handleApi({ method: 'POST', path: '/api/route', query: {}, body }, { mapsKey: 'K', cache, fetchImpl: f as unknown as typeof fetch });
+    expect(f).toHaveBeenCalledTimes(1);
+
+    const est = await handleApi(
+      { method: 'POST', path: '/api/route', query: {}, body: { origin: { location: { lat: 34.6, lng: 135.5 } }, destination: { location: { lat: 34.7, lng: 135.5 } }, mode: 'WALK' } },
+      { cache },
+    );
+    expect(est.json).toMatchObject({ source: 'estimate' });
+    expect(cache.store.size).toBe(1);
+  });
+
+  it('validates input and 404s unknown routes', async () => {
+    const cache = memCache();
+    expect((await handleApi({ method: 'POST', path: '/api/resolve-place', query: {}, body: {} }, { cache })).status).toBe(400);
+    expect((await handleApi({ method: 'GET', path: '/api/nope', query: {}, body: null }, { cache })).status).toBe(404);
   });
 });
