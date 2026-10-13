@@ -85,6 +85,15 @@ npx firebase-tools deploy             # 會自動 build 網站與 function，並
 
 結果應該是每月 US$1 以下，從額度扣。注意：額度是否涵蓋 **Google Maps Platform** 請在「帳單 → 報表」看第一週的實際扣款確認；就算不涵蓋，自用量也多半落在 Maps 的每月免費用量裡。
 
+## 票券夾（Firebase Storage）
+
+總覽的「票券夾」可上傳圖片與 PDF（≤ 20 MB）。只有行程成員登入後能讀；勾「只有我看得到」的檔案只有上傳者能讀（`storage.rules`、`firestore.rules` 在伺服器端檢查）。下載一律用登入身分（`getBlob`），不產生公開連結；開過的檔案存在手機的 IndexedDB，離線可開。
+
+一次性設定：
+1. Firebase console → Storage → 開始使用（正式版模式）。
+2. `gcloud storage buckets update gs://<專案>.firebasestorage.app --cors-file=cors.json`（瀏覽器下載需要 CORS）。
+3. `npx firebase-tools deploy`（第一次會問是否授權 Storage 讀 Firestore 成員名單，回答 y）。
+
 ## 日本電車路線（Gemini）
 
 Routes API 不提供日本的大眾運輸路線（[官方 FAQ](https://developers.google.com/maps/faq?csw=1)）。查不到時，function 會改問 Gemini（開啟 Google 搜尋），整理出時間、路線、票價和參考來源，結果快取 7 天。查詢失敗才退回距離估算。

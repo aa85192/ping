@@ -27,6 +27,15 @@ service cloud.firestore {
       match /{sub}/{docId} {
         allow read, write: if sub in ['cards', 'bookings', 'expenses'] && isMember(tripId);
       }
+
+      // 票券夾: file metadata. Private files are visible to their owner only.
+      match /files/{fileId} {
+        allow read: if isMember(tripId) && (resource.data.private == false || resource.data.ownerUid == request.auth.uid);
+        allow create: if isMember(tripId) && request.resource.data.ownerUid == request.auth.uid && request.resource.data.private is bool;
+        allow update: if isMember(tripId) && resource.data.ownerUid == request.auth.uid
+          && request.resource.data.ownerUid == resource.data.ownerUid;
+        allow delete: if isMember(tripId) && resource.data.ownerUid == request.auth.uid;
+      }
     }
   }
 }

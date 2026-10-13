@@ -1,6 +1,6 @@
 import { mapsDirectionsUrl, mapsPlaceUrl, LINK_KIND_LABEL } from '@ping/shared';
 import { BedDouble, CalendarClock, ChevronRight, Info, Pencil, Plane, Plus, Ticket, TriangleAlert } from 'lucide-react';
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { LinkIcon, ModeIcon, StarMark, WeatherIcon } from '../../components/icons';
 import type { Booking, BookingKind, DayInfo, Trip } from '../../data/model';
 import { tripDates } from '../../data/model';
@@ -13,6 +13,27 @@ import { tripWeather, weatherLabel, type DayWeather } from '../../lib/weather';
 import { useApp } from '../../store';
 import { BookingSheet, emptyBooking, STATUS_LABEL } from '../booking/BookingSheet';
 import { FlightLive } from './FlightLive';
+import { cloudEnabled } from '../../data/firebase';
+
+// Firebase Storage is only downloaded in cloud mode.
+const FilesWidget = lazy(() => import('./FilesWidget'));
+
+function Files() {
+  if (!cloudEnabled)
+    return (
+      <section className="card">
+        <div className="card-head">
+          <h2>票券夾</h2>
+        </div>
+        <div className="small muted">票券夾需要用 Google 登入（雲端模式），檔案才能安全地存在你的專案裡、和旅伴共享。</div>
+      </section>
+    );
+  return (
+    <Suspense fallback={<section className="card small muted">票券夾載入中…</section>}>
+      <FilesWidget />
+    </Suspense>
+  );
+}
 
 export function dayInfoFor(trip: Trip, date: string, lodging?: Booking): DayInfo {
   const d = trip.days[date];
@@ -324,6 +345,7 @@ export function Dashboard({ onNavigate }: { onNavigate: (t: TabId) => void }) {
     lodging: () => <Lodging list={lodging} onEdit={setEditing} />,
     weather: () => <Weather trip={trip} lodging={lodging[0]} />,
     tours: () => <Tours list={byKind(['tour', 'rail'])} onEdit={setEditing} />,
+    files: () => <Files />,
   };
 
   return (

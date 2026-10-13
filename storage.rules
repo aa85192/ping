@@ -1,0 +1,23 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    function isMember(tripId) {
+      return request.auth != null
+        && request.auth.uid in firestore.get(/databases/(default)/documents/trips/$(tripId)).data.members;
+    }
+
+    // 票券夾: only trip members can read; files marked private only by their owner.
+    // No public download URLs are used; the app always downloads with the user's sign-in.
+    match /trips/{tripId}/files/{fileId}/{name} {
+      allow read: if isMember(tripId)
+        && (resource.metadata.private != 'true' || resource.metadata.owner == request.auth.uid);
+      allow create: if isMember(tripId)
+        && request.resource.size < 20 * 1024 * 1024
+        && request.resource.metadata.owner == request.auth.uid
+        && (request.resource.contentType.matches('image/.*') || request.resource.contentType == 'application/pdf');
+      allow update: if isMember(tripId) && resource.metadata.owner == request.auth.uid
+        && request.resource.metadata.owner == request.auth.uid;
+      allow delete: if isMember(tripId) && resource.metadata.owner == request.auth.uid;
+    }
+  }
+}

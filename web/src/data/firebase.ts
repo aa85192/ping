@@ -6,6 +6,9 @@ const config = {
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN as string | undefined,
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID as string | undefined,
   appId: import.meta.env.VITE_FIREBASE_APP_ID as string | undefined,
+  storageBucket:
+    (import.meta.env.VITE_FIREBASE_STORAGE_BUCKET as string | undefined) ||
+    (import.meta.env.VITE_FIREBASE_PROJECT_ID ? `${import.meta.env.VITE_FIREBASE_PROJECT_ID}.firebasestorage.app` : undefined),
 };
 
 export const cloudEnabled = Boolean(config.apiKey && config.projectId);

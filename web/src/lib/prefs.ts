@@ -3,7 +3,7 @@ import { createJSONStorage, persist } from 'zustand/middleware';
 import type { ThemeOverrides } from '../theme/tokens';
 
 export type TabId = 'home' | 'plan' | 'map' | 'money' | 'inbox' | 'settings';
-export type WidgetId = 'countdown' | 'today' | 'flights' | 'lodging' | 'weather' | 'tours';
+export type WidgetId = 'countdown' | 'today' | 'flights' | 'lodging' | 'weather' | 'tours' | 'files';
 export type CardField = 'photo' | 'rating' | 'hours' | 'address' | 'time' | 'memos' | 'tags';
 export type ThemeMode = 'system' | 'light' | 'dark';
 
@@ -23,6 +23,7 @@ export const WIDGET_LABEL: Record<WidgetId, string> = {
   lodging: '住宿',
   weather: '當週天氣',
   tours: '其他預訂',
+  files: '票券夾',
 };
 
 export const CARD_FIELD_LABEL: Record<CardField, string> = {
@@ -73,7 +74,7 @@ export const usePrefs = create<PrefsState>()(
       themeMode: 'system',
       overrides: {},
       tabs: ALL_TABS.map((id) => ({ id, visible: true })),
-      widgets: (['countdown', 'today', 'flights', 'lodging', 'weather', 'tours'] as WidgetId[]).map((id) => ({ id, visible: true })),
+      widgets: (['countdown', 'today', 'flights', 'files', 'lodging', 'weather', 'tours'] as WidgetId[]).map((id) => ({ id, visible: true })),
       cardFields: { photo: true, rating: true, hours: true, address: false, time: true, memos: true, tags: true },
       activeTripId: null,
       set: (p) => set(p),
@@ -81,13 +82,18 @@ export const usePrefs = create<PrefsState>()(
     {
       name: 'ping:prefs',
       storage: safeStorage,
-      version: 2,
+      version: 3,
       // v2 added the 花費 tab: insert it after 地圖 for people who already customised their tabs.
       migrate: (state, version) => {
         const s = state as PrefsState;
         if (version < 2 && s.tabs && !s.tabs.some((t) => t.id === 'money')) {
           const i = s.tabs.findIndex((t) => t.id === 'map');
           s.tabs.splice(i < 0 ? s.tabs.length - 1 : i + 1, 0, { id: 'money', visible: true });
+        }
+        // v3 added the 票券夾 widget right after 航班.
+        if (version < 3 && s.widgets && !s.widgets.some((w) => w.id === 'files')) {
+          const i = s.widgets.findIndex((w) => w.id === 'flights');
+          s.widgets.splice(i < 0 ? s.widgets.length : i + 1, 0, { id: 'files', visible: true });
         }
         return s;
       },
