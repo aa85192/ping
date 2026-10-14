@@ -1,16 +1,23 @@
 /**
- * 星星人配色（Ping 自訂色票）
+ * 星星人配色（POP MART TWINKLE TWINKLE）
  *
- * POP MART 沒有公開 TWINKLE TWINKLE 的官方色號；以下是依角色公開特徵
- * （暖黃身體、紅撲撲臉頰、深色星星眼、粉彩系列與「好夢氣象局」天空主題）
- * 訂出的固定色號，文字組合皆已檢查 WCAG AA（≥ 4.5:1）。
- * 設定頁可用「從照片取色」以自己的公仔照片覆寫主色 / 強調色 / 輔助色。
+ * 色號由官方插畫與全款展示圖逐像素取樣（依色相 / 明度篩選後取中位數，
+ * 三張圖交叉比對）。標「衍生」的是為了可讀性從取樣色調亮或加深的值；
+ * 所有文字組合皆 ≥ WCAG AA 4.5:1。
+ *
+ *   星星黃   #FCD32C  插畫星星                描邊棕   #7A3E18  輪廓線、眼睛
+ *   奶油底   #FCE5AF  全款展示海報底           插畫底   #FAECA4  插畫背景
+ *   芥末框   #F9C668  海報外框                琥珀身   #F0A94B  公仔身體 / 兜帽
+ *   蜜桃臉   #F98350  臉                      腮紅     #F2633A  臉頰
+ *   蘋果紅   #B1371C  小蘋果                  青蘋果   #AFAA45  青蘋果帽
+ *   葉子綠   #4A6514  蘋果葉                  標籤藍   #0A4D76  Twinkle 標籤
  */
 export interface Palette {
   bg: string;
   surface: string;
   surface2: string;
   border: string;
+  outline: string;
   ink: string;
   muted: string;
   onStar: string;
@@ -30,58 +37,63 @@ export interface Palette {
 }
 
 export const DAYLIGHT: Palette = {
-  bg: '#FFF9EC', // 奶油星光
-  surface: '#FFFFFF',
-  surface2: '#FFF4DA', // 淡奶黃
-  border: '#F0E4C8',
-  ink: '#33283A', // 星星眼深紫棕
-  muted: '#766A80',
-  onStar: '#33283A',
-  star: '#FFD23F', // 星光黃（身體）
-  starDeep: '#F2B600', // 星光黃・深（按下、描邊）
-  starSoft: '#FFF1BF',
-  cheek: '#FF7A8A', // 臉頰粉
-  cheekSoft: '#FFE3E7',
-  cheekInk: '#B8304A',
-  sky: '#7EB8F0', // 夢境藍
-  skySoft: '#E2EFFC',
-  skyInk: '#2D6AA8',
-  mint: '#6FCFAE', // 薄荷綠（狀態 OK）
-  mintSoft: '#DCF4EA',
-  mintInk: '#1D7556',
-  shadow: '0 1px 2px rgba(51,40,58,.06), 0 6px 18px rgba(51,40,58,.06)',
+  bg: '#FCE5AF', // 奶油底（海報）
+  surface: '#FFF8E7', // 衍生：奶油底提亮，卡片
+  surface2: '#FAECA4', // 插畫底
+  border: '#EBCB8B', // 衍生：芥末框淡化
+  outline: '#7A3E18', // 描邊棕
+  ink: '#4E2810', // 衍生：描邊棕加深，內文
+  muted: '#86603F', // 衍生：描邊棕減彩
+  onStar: '#4E2810',
+  star: '#FCD32C', // 星星黃
+  starDeep: '#F0A94B', // 琥珀身
+  starSoft: '#FDF0B0', // 衍生
+  cheek: '#F2633A', // 腮紅
+  cheekSoft: '#FDDCC8', // 衍生：蜜桃臉淡化
+  cheekInk: '#B1371C', // 蘋果紅
+  sky: '#0A4D76', // 標籤藍
+  skySoft: '#D9E6EE', // 衍生
+  skyInk: '#0A4D76', // 標籤藍
+  mint: '#AFAA45', // 青蘋果
+  mintSoft: '#EEEBC6', // 衍生
+  mintInk: '#4A6514', // 葉子綠
+  shadow: '0 1px 0 rgba(122,62,24,.10), 0 6px 16px rgba(122,62,24,.10)',
 };
 
+/** 星夜：以標籤藍為夜空，星星與奶油色不變。 */
 export const NIGHT: Palette = {
-  bg: '#141832', // 夜空藍
-  surface: '#1E2346',
-  surface2: '#272D58',
-  border: '#343B6E',
-  ink: '#F6F1E7',
-  muted: '#A8A5C6',
-  onStar: '#1A1530',
-  star: '#FFD84D',
-  starDeep: '#FFC61A',
-  starSoft: '#3A3650',
-  cheek: '#FF8C9B',
-  cheekSoft: '#45304F',
-  cheekInk: '#FFAAB6',
-  sky: '#8FC3FF',
-  skySoft: '#243963',
-  skyInk: '#A9CFFF',
-  mint: '#74D6B4',
-  mintSoft: '#1E4447',
-  mintInk: '#93E3C4',
-  shadow: '0 1px 2px rgba(0,0,0,.25), 0 8px 24px rgba(0,0,0,.25)',
+  bg: '#0C2740', // 衍生：標籤藍加深
+  surface: '#13334F',
+  surface2: '#1A3F60',
+  border: '#2A5272',
+  outline: '#FCD32C',
+  ink: '#FCE5AF', // 奶油底
+  muted: '#C9B48C',
+  onStar: '#4E2810',
+  star: '#FCD32C', // 星星黃
+  starDeep: '#F9C668', // 芥末框
+  starSoft: '#3A3A2E',
+  cheek: '#F98350', // 蜜桃臉
+  cheekSoft: '#4A2E2A',
+  cheekInk: '#FDB08F',
+  sky: '#7FB3D5',
+  skySoft: '#1D4566',
+  skyInk: '#B9D6EA',
+  mint: '#C9C46A',
+  mintSoft: '#2E3F2A',
+  mintInk: '#D8D48A',
+  shadow: '0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.28)',
 };
 
 export const SWATCHES: { name: string; light: string; dark: string; role: string }[] = [
-  { name: '星光黃', light: DAYLIGHT.star, dark: NIGHT.star, role: '主色：目前分頁、主按鈕' },
-  { name: '臉頰粉', light: DAYLIGHT.cheek, dark: NIGHT.cheek, role: '強調：提醒、memo、單車' },
-  { name: '夢境藍', light: DAYLIGHT.sky, dark: NIGHT.sky, role: '輔助：天氣、大眾運輸、連結' },
-  { name: '薄荷綠', light: DAYLIGHT.mint, dark: NIGHT.mint, role: '狀態：已付款、步行' },
-  { name: '星星眼', light: DAYLIGHT.ink, dark: NIGHT.ink, role: '文字' },
-  { name: '奶油星光 / 夜空藍', light: DAYLIGHT.bg, dark: NIGHT.bg, role: '背景' },
+  { name: '星星黃', light: '#FCD32C', dark: '#FCD32C', role: '主色：目前分頁、主按鈕（插畫星星）' },
+  { name: '描邊棕', light: '#7A3E18', dark: '#FCD32C', role: '黃色元件的貼紙描邊（輪廓線、眼睛）' },
+  { name: '腮紅', light: '#F2633A', dark: '#F98350', role: '強調：提醒、徽章（臉頰）' },
+  { name: '蘋果紅', light: '#B1371C', dark: '#FDB08F', role: '警示文字（小蘋果）' },
+  { name: '標籤藍', light: '#0A4D76', dark: '#B9D6EA', role: '大眾運輸、連結、圖表（Twinkle 標籤）' },
+  { name: '葉子綠 / 青蘋果', light: '#4A6514', dark: '#D8D48A', role: '已付款、步行（蘋果葉）' },
+  { name: '琥珀身', light: '#F0A94B', dark: '#F9C668', role: '按下狀態、深一階的黃（公仔身體）' },
+  { name: '奶油底 / 星夜', light: '#FCE5AF', dark: '#0C2740', role: '背景（全款展示海報底）' },
 ];
 
 export interface ThemeOverrides {
@@ -157,6 +169,7 @@ export function applyPalette(p: Palette, radius = 16): void {
     '--surface': p.surface,
     '--surface-2': p.surface2,
     '--border': p.border,
+    '--outline': p.outline,
     '--ink': p.ink,
     '--muted': p.muted,
     '--on-star': p.onStar,

@@ -88,13 +88,13 @@ function ThemeSection() {
       <div className="seg" role="group" aria-label="主題">
         {(['system', 'light', 'dark'] as const).map((m) => (
           <button key={m} aria-pressed={prefs.themeMode === m} onClick={() => prefs.set({ themeMode: m })}>
-            {m === 'system' ? '跟隨系統' : m === 'light' ? '白天' : '夜空'}
+            {m === 'system' ? '跟隨系統' : m === 'light' ? '白天' : '星夜'}
           </button>
         ))}
       </div>
 
       <div className="stack" style={{ gap: 6 }}>
-        <div className="small muted">星星人色票（白天 / 夜空）</div>
+        <div className="small muted">星星人色票（白天 / 星夜，取自官方插畫）</div>
         {SWATCHES.map((s) => (
           <div key={s.name} className="palette-row">
             <span className="swatch" style={{ background: s.light, cursor: 'default' }} />
@@ -111,9 +111,9 @@ function ThemeSection() {
 
       <div className="stack" style={{ gap: 8 }}>
         <div className="small muted">自訂顏色（只影響這台裝置）</div>
-        <ColorRow label="主色・星光黃" value={prefs.overrides.star} fallback={base.star} onChange={(v) => setO({ star: v })} />
-        <ColorRow label="強調・臉頰粉" value={prefs.overrides.cheek} fallback={base.cheek} onChange={(v) => setO({ cheek: v })} />
-        <ColorRow label="輔助・夢境藍" value={prefs.overrides.sky} fallback={base.sky} onChange={(v) => setO({ sky: v })} />
+        <ColorRow label="主色・星星黃" value={prefs.overrides.star} fallback={base.star} onChange={(v) => setO({ star: v })} />
+        <ColorRow label="強調・腮紅" value={prefs.overrides.cheek} fallback={base.cheek} onChange={(v) => setO({ cheek: v })} />
+        <ColorRow label="輔助・標籤藍" value={prefs.overrides.sky} fallback={base.sky} onChange={(v) => setO({ sky: v })} />
         <label className="field">
           <span>圓角 {prefs.overrides.radius ?? 16}px</span>
           <input type="range" min={6} max={24} value={prefs.overrides.radius ?? 16} onChange={(e) => setO({ radius: Number(e.target.value) })} />
@@ -224,7 +224,7 @@ function TripSection() {
             className="btn sm"
             disabled={!newTag.trim()}
             onClick={() => {
-              void patchTrip({ tags: [...trip.tags, { id: newId('tag_'), label: newTag.trim(), color: '#B79CF2' }] });
+              void patchTrip({ tags: [...trip.tags, { id: newId('tag_'), label: newTag.trim(), color: '#AFAA45' }] });
               setNewTag('');
             }}
           >

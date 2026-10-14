@@ -22,8 +22,8 @@ export default defineConfig(({ mode }) => {
           short_name: 'Ping',
           description: '兩人共編的旅行行程、景點卡片與交通時間',
           lang: 'zh-TW',
-          theme_color: '#FFF9EC',
-          background_color: '#FFF9EC',
+          theme_color: '#FCE5AF',
+          background_color: '#FCE5AF',
           display: 'standalone',
           start_url: '/',
           icons: [

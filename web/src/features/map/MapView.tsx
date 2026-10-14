@@ -10,7 +10,8 @@ import { useApp } from '../../store';
 
 const BROWSER_KEY = (import.meta.env.VITE_GOOGLE_MAPS_BROWSER_KEY as string | undefined) ?? '';
 const MAP_ID = (import.meta.env.VITE_GOOGLE_MAPS_MAP_ID as string | undefined) || 'DEMO_MAP_ID';
-const DAY_COLORS = ['#FFD23F', '#FF7A8A', '#7EB8F0', '#6FCFAE', '#B79CF2', '#FFA45C', '#5CC8D6', '#E58FD0'];
+// 星星人色系的中明度版本；已通過 dataviz 驗證（標記另有數字與日期，CVD 有次要編碼）。
+const DAY_COLORS = ['#D9A21C', '#E8572F', '#2F78A8', '#8F8A2A', '#B9442A', '#D88A2E', '#5E7F22', '#E07A55'];
 
 const MODE_PARAM = { WALK: 'walking', TRANSIT: 'transit', DRIVE: 'driving', BICYCLE: 'bicycling' } as const;
 
@@ -104,7 +105,7 @@ export function MapView() {
                     .filter((c) => c.location)
                     .map((c, i) => (
                       <AdvancedMarker key={c.id} position={c.location!} onClick={() => setOpenCard(c.id)} title={c.name}>
-                        <div className="marker num" style={{ background: g.color }}>
+                        <div className="marker num" style={{ background: g.color, color: '#FFF8E7' }}>
                           {i + 1}
                         </div>
                       </AdvancedMarker>

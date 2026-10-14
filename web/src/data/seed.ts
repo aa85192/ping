@@ -30,11 +30,11 @@ export function osakaTripSeed(): { trip: Trip; bookings: Booking[]; cards: Place
       '2026-10-31': { ...OSAKA, title: '返程', startTime: '09:00' },
     },
     tags: [
-      { id: 'sight', label: '景點', color: '#7EB8F0' },
-      { id: 'food', label: '美食', color: '#FF7A8A' },
-      { id: 'shop', label: '購物', color: '#FFD23F' },
-      { id: 'park', label: '樂園', color: '#B79CF2' },
-      { id: 'move', label: '交通', color: '#6FCFAE' },
+      { id: 'sight', label: '景點', color: '#0A4D76' },
+      { id: 'food', label: '美食', color: '#F2633A' },
+      { id: 'shop', label: '購物', color: '#FCD32C' },
+      { id: 'park', label: '樂園', color: '#B1371C' },
+      { id: 'move', label: '交通', color: '#AFAA45' },
     ],
     updatedAt: Date.now(),
   };
@@ -170,9 +170,9 @@ export function blankTripSeed(name: string, startDate: string, endDate: string):
     defaultMode: 'TRANSIT',
     days: {},
     tags: [
-      { id: 'sight', label: '景點', color: '#7EB8F0' },
-      { id: 'food', label: '美食', color: '#FF7A8A' },
-      { id: 'shop', label: '購物', color: '#FFD23F' },
+      { id: 'sight', label: '景點', color: '#0A4D76' },
+      { id: 'food', label: '美食', color: '#F2633A' },
+      { id: 'shop', label: '購物', color: '#FCD32C' },
     ],
     updatedAt: Date.now(),
   };

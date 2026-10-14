@@ -81,19 +81,26 @@ export function LinkIcon({ kind, size = 18 }: { kind: LinkKind; size?: number })
   }
 }
 
-export function StarMark({ size = 28, face = true, fill = 'var(--star)' }: { size?: number; face?: boolean; fill?: string }) {
+/** 星星人風格的星星：星星黃＋描邊棕輪廓、棕色眼睛帶星形高光、腮紅。 */
+export function StarMark({ size = 28, face = true, fill = '#FCD32C' }: { size?: number; face?: boolean; fill?: string }) {
   return (
     <svg width={size} height={size} viewBox="0 0 100 100" aria-hidden="true">
       <path
         d="M50 8c2.2 0 3.6 1.3 4.6 3.4l9.6 19.5 21.5 3.1c2.3.3 3.8 1.3 4.5 3.3.7 2.1 0 3.8-1.6 5.4L73 58.8l3.7 21.4c.4 2.3-.2 4-2 5.3-1.8 1.3-3.6 1.3-5.6.2L50 75.6 30.8 85.7c-2 1.1-3.8 1.1-5.6-.2-1.8-1.3-2.4-3-2-5.3L27 58.8 11.4 42.7c-1.6-1.6-2.3-3.3-1.6-5.4.7-2 2.2-3 4.5-3.3l21.5-3.1 9.6-19.5C46.4 9.3 47.8 8 50 8z"
         fill={fill}
+        stroke={face ? '#7A3E18' : 'none'}
+        strokeWidth="4"
+        strokeLinejoin="round"
       />
       {face && (
         <g>
-          <ellipse cx="41" cy="50" rx="3.4" ry="4.2" fill="#33283A" />
-          <ellipse cx="59" cy="50" rx="3.4" ry="4.2" fill="#33283A" />
-          <ellipse cx="34" cy="58" rx="5.5" ry="3.4" fill="var(--cheek)" />
-          <ellipse cx="66" cy="58" rx="5.5" ry="3.4" fill="var(--cheek)" />
+          <ellipse cx="34" cy="59" rx="6.5" ry="4.2" fill="#F2633A" opacity=".85" />
+          <ellipse cx="66" cy="59" rx="6.5" ry="4.2" fill="#F2633A" opacity=".85" />
+          <ellipse cx="41" cy="50" rx="4" ry="5" fill="#7A3E18" />
+          <ellipse cx="59" cy="50" rx="4" ry="5" fill="#7A3E18" />
+          <circle cx="42.2" cy="48.4" r="1.3" fill="#FFF8E7" />
+          <circle cx="60.2" cy="48.4" r="1.3" fill="#FFF8E7" />
+          <path d="M46.5 60c1.8 1.6 5.2 1.6 7 0" fill="none" stroke="#7A3E18" strokeWidth="2.2" strokeLinecap="round" />
         </g>
       )}
     </svg>
