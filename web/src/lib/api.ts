@@ -66,6 +66,7 @@ export async function resolveFromText(text: string): Promise<ResolveOutcome> {
   const target = url && isGoogleMapsUrl(url) ? url : nameHint ? mapsPlaceUrl({ name: nameHint }) : null;
   if (!target) return { place: null, sourceUrl: url ?? '', note: '找不到 Google Maps 網址或地點名稱' };
 
+  let apiProblem: string | null = null;
   if (apiEnabled) {
     try {
       const r = await call<ResolvePlaceResponse>('/api/resolve-place', { method: 'POST', body: JSON.stringify({ url: target }) });
@@ -73,17 +74,17 @@ export async function resolveFromText(text: string): Promise<ResolveOutcome> {
         if (r.place.quality === 'partial' && nameHint && r.place.name === '已釘選的位置') r.place.name = nameHint;
         return { place: r.place, sourceUrl: url ?? target, note: r.place.quality === 'partial' ? 'Google 沒找到完全相符的地點，先用網址中的位置' : undefined };
       }
-    } catch {
-      /* fall through to local parsing */
+      apiProblem = `Google 查不到這個地點（${r.error ?? '未知原因'}）`;
+    } catch (e) {
+      apiProblem = `連不到後端（${(e as Error).message}）`;
     }
   }
 
   if (url && isShortMapsUrl(url)) {
-    return {
-      place: nameHint ? { name: nameHint, quality: 'partial', googleMapsUri: url } : null,
-      sourceUrl: url,
-      note: '短網址需要 API 服務才能解析座標；已先用名稱建立卡片',
-    };
+    const why = apiProblem ?? '短網址需要後端服務才能解析';
+    return nameHint
+      ? { place: { name: nameHint, quality: 'partial', googleMapsUri: url }, sourceUrl: url, note: `${why}；已先用名稱「${nameHint}」建立卡片` }
+      : { place: null, sourceUrl: url, note: `無法加入：${why}` };
   }
   const parsed = parseMapsUrl(target);
   const name = parsed.name ?? nameHint;

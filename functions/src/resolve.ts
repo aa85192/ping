@@ -25,6 +25,9 @@ const DETAIL_FIELDS = [
   'photos',
 ].join(',');
 
+const BROWSER_UA =
+  'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1';
+
 /** Follow redirects by hand so we can see (and stop at) each hop. */
 export async function expandUrl(url: string, fetchImpl: Fetch = fetch, maxHops = 6): Promise<string> {
   let current = url;
@@ -37,10 +40,17 @@ export async function expandUrl(url: string, fetchImpl: Fetch = fetch, maxHops =
       current = cont;
       continue;
     }
-    const res = await fetchImpl(current, { redirect: 'manual', headers: { 'User-Agent': 'Mozilla/5.0 PingTripBot' } });
+    const res = await fetchImpl(current, { redirect: 'manual', headers: { 'User-Agent': BROWSER_UA, 'Accept-Language': 'zh-TW,zh;q=0.9,ja;q=0.8' } });
     const loc = res.headers.get('Location');
-    if (!loc) break;
-    current = new URL(loc, current).href;
+    if (loc) {
+      current = new URL(loc, current).href;
+      continue;
+    }
+    // Some short links answer 200 with an HTML/JS redirect instead of a 3xx.
+    const html = res.ok ? await res.text().catch(() => '') : '';
+    const m = html.match(/https:\/\/(?:www\.)?google\.[a-z.]+\/maps[^"'<>\s\\]*/) ?? html.match(/https:\/\/maps\.google\.[a-z.]+\/[^"'<>\s\\]*/);
+    if (!m) break;
+    current = m[0].replace(/&amp;/g, '&');
   }
   return current;
 }
@@ -155,6 +165,13 @@ function partial(parsed: ParsedMapsUrl, expandedUrl: string): ResolvedPlace | nu
 }
 
 export async function resolvePlace(url: string, key: string | undefined, fetchImpl: Fetch = fetch): Promise<ResolvePlaceResponse> {
+  const r = await resolvePlaceInner(url, key, fetchImpl);
+  // Logged so failures can be diagnosed with `firebase functions:log`.
+  if (r.place?.quality !== 'full') console.warn('resolve-place not full', JSON.stringify({ url, expandedUrl: r.expandedUrl, error: r.error, partial: Boolean(r.place) }));
+  return r;
+}
+
+async function resolvePlaceInner(url: string, key: string | undefined, fetchImpl: Fetch): Promise<ResolvePlaceResponse> {
   if (!isGoogleMapsUrl(url)) return { expandedUrl: url, place: null, error: '不是 Google Maps 網址' };
   const expandedUrl = await expandUrl(url, fetchImpl);
   const parsed = parseMapsUrl(expandedUrl);

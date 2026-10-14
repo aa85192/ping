@@ -41,7 +41,7 @@ export function Inbox() {
             <p>
               收集箱是空的
               <br />
-              <span className="small">在 Android 可直接從 Google Maps「分享」到 Ping</span>
+              <span className="small">Google Maps「分享」→ Ping（Android）或捷徑「加到 Ping」（iPhone）</span>
             </p>
           </div>
         ) : (

@@ -146,3 +146,11 @@ describe('handleApi', () => {
     expect((await handleApi({ method: 'GET', path: '/api/nope', query: {}, body: null }, { cache })).status).toBe(404);
   });
 });
+
+describe('expandUrl HTML fallback', () => {
+  it('reads the maps URL out of a 200 HTML redirect page', async () => {
+    const target = 'https://www.google.com/maps/place/%E9%80%9A%E5%A4%A9%E9%96%A3/@34.65,135.50,17z';
+    const f = vi.fn(async () => new Response(`<html><script>window.location.replace("${target}&amp;g_st=ic")</script></html>`, { status: 200 }));
+    expect(await expandUrl('https://maps.app.goo.gl/abc?g_st=ic', f as unknown as typeof fetch)).toBe(`${target}&g_st=ic`);
+  });
+});
