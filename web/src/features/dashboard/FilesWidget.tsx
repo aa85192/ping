@@ -36,7 +36,7 @@ function UploadSheet({ files, onClose }: { files: File[]; onClose: () => void })
     }
   };
   return (
-    <Sheet title="上傳到票券夾" onClose={progress == null ? onClose : () => {}}>
+    <Sheet title="上傳到票券夾" onClose={onClose} dismissible={progress == null}>
       <div className="list">
         {files.map((f) => (
           <div key={f.name + f.size} className="list-item small">
